@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { FaChevronLeft, FaChevronRight, FaImages, FaCalendarDays } from "react-icons/fa6";
+import { FaChevronLeft, FaChevronRight, FaCalendarDays } from "react-icons/fa6";
 import Modal from "@/app/components/modal";
 
 export interface GalleryItem {
+  type?: "photo" | "video";
+  youtubeId?: string;
   src: string;
   images?: string[];
   title: string;
@@ -21,10 +23,24 @@ interface GaleriModalProps {
 }
 
 export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps) {
+  const [activeItem, setActiveItem] = useState<GalleryItem | null>(item);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  useEffect(() => {
+    if (item) {
+      setActiveItem(item);
+    }
+  }, [item]);
+
+  const currentItem = item || activeItem;
+
   // Kumpulan foto: gunakan array images jika ada, fallback ke src utama
-  const images = item?.images && item.images.length > 0 ? item.images : item?.src ? [item.src] : [];
+  const images =
+    currentItem?.images && currentItem.images.length > 0
+      ? currentItem.images
+      : currentItem?.src
+      ? [currentItem.src]
+      : [];
 
   // Reset index saat item berubah atau modal dibuka
   useEffect(() => {
@@ -47,8 +63,6 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, images.length]);
 
-  if (!item) return null;
-
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
@@ -61,7 +75,8 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="5xl">
-      <div className="grid grid-cols-1 md:grid-cols-12 overflow-hidden -m-6 rounded-2xl bg-white dark:bg-zinc-900 md:min-h-[580px]">
+      {currentItem && (
+        <div className="grid grid-cols-1 md:grid-cols-12 overflow-hidden -m-6 rounded-2xl bg-white dark:bg-zinc-900 md:min-h-[580px]">
         {/* Sisi Kiri: Preview Foto dengan Tombol Navigasi < dan > */}
         <div className="relative w-full h-[360px] md:h-auto md:min-h-full bg-white dark:bg-zinc-900 md:col-span-7 flex items-center justify-center overflow-hidden border-b md:border-b-0 md:border-r border-zinc-100 dark:border-zinc-800">
           {/* Sliding Track Carousel */}
@@ -76,7 +91,7 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
               >
                 <Image
                   src={img}
-                  alt={`${item.title} - Foto ${idx + 1}`}
+                  alt={`${currentItem.title} - Foto ${idx + 1}`}
                   fill
                   sizes="(max-width: 768px) 100vw, 60vw"
                   className="object-contain p-2 md:p-4"
@@ -113,7 +128,6 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
           {/* Indikator Jumlah Foto */}
           {images.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-zinc-900/70 px-3 py-1 text-xs font-medium text-white shadow-sm backdrop-blur-xs">
-              <FaImages className="text-xs text-emerald-400" />
               <span>
                 {currentIndex + 1} / {images.length}
               </span>
@@ -125,16 +139,16 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
         <div className="flex flex-col justify-between p-6 md:col-span-5 md:p-8">
           <div>
             {/* Tanggal Kegiatan */}
-            {item.date && (
+            {currentItem.date && (
               <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                 <FaCalendarDays className="text-[11px]" />
-                <span>{item.date}</span>
+                <span>{currentItem.date}</span>
               </div>
             )}
 
             {/* Judul Kegiatan */}
             <h3 className="mt-2 text-xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-2xl">
-              {item.title}
+              {currentItem.title}
             </h3>
 
             {/* Garis Pembatas Lembut */}
@@ -142,7 +156,7 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
 
             {/* Deskripsi Lengkap */}
             <div className="space-y-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-              <p>{item.desc}</p>
+              <p>{currentItem.desc}</p>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Dokumentasi resmi kegiatan santri dan civitas akademika MIS Daarul Ilmi Balaraja dalam menumbuhkan karakter islami, kemandirian, dan kebersamaan.
               </p>
@@ -181,6 +195,7 @@ export default function GaleriModal({ isOpen, onClose, item }: GaleriModalProps)
           )}
         </div>
       </div>
+      )}
     </Modal>
   );
 }

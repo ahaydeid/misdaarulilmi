@@ -13,6 +13,8 @@ export interface ModalProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl";
   closeOnOverlay?: boolean;
   showCloseButton?: boolean;
+  className?: string;
+  bodyClassName?: string;
 }
 
 const sizeClasses: Record<NonNullable<ModalProps["size"]>, string> = {
@@ -36,6 +38,8 @@ export default function Modal({
   size = "md",
   closeOnOverlay = true,
   showCloseButton = true,
+  className,
+  bodyClassName,
 }: ModalProps) {
   const [mounted, setMounted] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
@@ -63,7 +67,7 @@ export default function Modal({
       // Berikan jeda transisi selesai sebelum unmount
       timer = setTimeout(() => {
         setMounted(false);
-      }, 250);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -103,9 +107,9 @@ export default function Modal({
 
       {/* Kontainer Modal dengan Animasi Zoom In / Zoom Out Halus */}
       <div
-        className={`relative z-10 w-full overflow-hidden rounded-md bg-white shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:bg-zinc-900 ${
-          sizeClasses[size]
-        } ${
+        className={`relative z-10 w-full overflow-hidden shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className || "rounded-md bg-white dark:bg-zinc-900"
+        } ${sizeClasses[size]} ${
           visible
             ? "translate-y-0 scale-100 opacity-100"
             : "translate-y-3 scale-95 opacity-0 pointer-events-none"
@@ -117,7 +121,7 @@ export default function Modal({
             type="button"
             onClick={onClose}
             aria-label="Tutup modal"
-            className="absolute top-3 right-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 active:scale-95 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            className="absolute top-3 right-3 z-30 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 active:scale-95 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
           >
             <FaXmark className="h-4 w-4" />
           </button>
@@ -133,7 +137,13 @@ export default function Modal({
         )}
 
         {/* Konten Utama Modal */}
-        <div className="p-6 text-sm text-zinc-700 dark:text-zinc-300">
+        <div
+          className={
+            bodyClassName !== undefined
+              ? bodyClassName
+              : "p-6 text-sm text-zinc-700 dark:text-zinc-300"
+          }
+        >
           {children}
         </div>
 
