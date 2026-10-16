@@ -9,6 +9,7 @@ import {
   FaMosque,
   FaCompass,
   FaFlask,
+  FaUser,
 } from "react-icons/fa6";
 
 export const metadata: Metadata = {
@@ -76,6 +77,41 @@ const schoolIdentity = [
   { label: "Waktu Belajar", value: "Pagi Hari (Senin – Sabtu)" },
   { label: "Kecamatan / Kab.", value: "Balaraja, Kabupaten Tangerang" },
   { label: "Provinsi", value: "Banten" },
+];
+
+const staffMembers = [
+  {
+    name: "H. Ahmad Nawawi, S.Pd.I",
+    subject: "Kepala Madrasah & Tahfidz",
+  },
+  {
+    name: "Siti Maryam, S.Pd.",
+    subject: "Tematik & Matematika",
+  },
+  {
+    name: "M. Rizki Fadillah, S.Pd.I",
+    subject: "Fiqih & Bahasa Arab",
+  },
+  {
+    name: "Nurul Hidayah, S.Pd.",
+    subject: "IPA & Bahasa Indonesia",
+  },
+  {
+    name: "Fajar Shodiq, S.Kom.",
+    subject: "TIK & Kepramukaan",
+  },
+  {
+    name: "Halimah, S.Ag.",
+    subject: "Al-Qur'an Hadits & Akidah",
+  },
+  {
+    name: "Dedi Kurniawan, S.Pd.",
+    subject: "Penjasorkes (PJOK)",
+  },
+  {
+    name: "Eka Rahmawati, S.E.",
+    subject: "Tata Usaha & Administrasi",
+  },
 ];
 
 export default function ProfilPage() {
@@ -179,6 +215,55 @@ export default function ProfilPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Section Staff Dan Tendik (Sliding 1 Baris Tanpa Card Pembungkus) */}
+      <div className="mt-16">
+        <style>{`
+          @keyframes staff-marquee {
+            0% {
+              transform: translateX(0%);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+          .staff-marquee-track {
+            display: flex;
+            width: max-content;
+            animation: staff-marquee 60s linear infinite;
+          }
+        `}</style>
+
+        <h2 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          Staff Dan Tendik
+        </h2>
+
+        <div className="relative w-full overflow-hidden py-2">
+          {/* Subtle Fade Edges */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 sm:w-24 bg-gradient-to-r from-gray-50/90 via-gray-50/40 to-transparent dark:from-zinc-950/90 dark:via-zinc-950/40 dark:to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 sm:w-24 bg-gradient-to-l from-gray-50/90 via-gray-50/40 to-transparent dark:from-zinc-950/90 dark:via-zinc-950/40 dark:to-transparent" />
+
+          {/* 1 Baris Sliding Items */}
+          <div className="staff-marquee-track flex gap-8 pr-8">
+            {[...staffMembers, ...staffMembers].map((staff, idx) => (
+              <div
+                key={idx}
+                className="w-48 sm:w-56 shrink-0 flex flex-col items-center text-center"
+              >
+                <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
+                  <FaUser className="h-8 w-8 sm:h-10 sm:w-10" />
+                </div>
+                <h3 className="mt-3 text-sm font-semibold text-zinc-900 sm:text-base dark:text-white">
+                  {staff.name}
+                </h3>
+                <p className="mt-1 text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">
+                  {staff.subject}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
