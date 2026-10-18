@@ -107,8 +107,8 @@ export default function Modal({
 
       {/* Kontainer Modal dengan Animasi Zoom In / Zoom Out Halus */}
       <div
-        className={`relative z-10 w-full overflow-hidden shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          className || "rounded-md bg-white dark:bg-zinc-900"
+        className={`relative z-10 w-full overflow-hidden shadow-2xl flex flex-col max-h-[calc(100vh-2.5rem)] sm:max-h-[calc(100vh-4rem)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className || "rounded-xl bg-white dark:bg-zinc-900"
         } ${sizeClasses[size]} ${
           visible
             ? "translate-y-0 scale-100 opacity-100"
@@ -129,7 +129,7 @@ export default function Modal({
 
         {/* Header Modal */}
         {title && (
-          <div className="border-b border-zinc-100 px-6 py-4 pr-12 dark:border-zinc-800">
+          <div className="shrink-0 border-b border-zinc-100 px-6 py-4 pr-12 dark:border-zinc-800">
             <h3 className="text-base font-semibold text-zinc-900 dark:text-white">
               {title}
             </h3>
@@ -138,18 +138,18 @@ export default function Modal({
 
         {/* Konten Utama Modal */}
         <div
-          className={
+          className={`flex-1 overflow-y-auto thin-scroll ${
             bodyClassName !== undefined
               ? bodyClassName
               : "p-6 text-sm text-zinc-700 dark:text-zinc-300"
-          }
+          }`}
         >
           {children}
         </div>
 
         {/* Footer Modal (Opsional) */}
         {footer && (
-          <div className="flex items-center justify-end gap-2.5 border-t border-zinc-100 bg-zinc-50/50 px-6 py-3.5 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <div className="shrink-0 flex items-center justify-end gap-2.5 border-t border-zinc-100 bg-zinc-50/50 px-6 py-3.5 dark:border-zinc-800 dark:bg-zinc-950/40">
             {footer}
           </div>
         )}

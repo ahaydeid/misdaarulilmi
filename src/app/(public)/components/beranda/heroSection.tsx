@@ -83,7 +83,7 @@ export default function HeroSection() {
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/profil"
-                className="rounded-lg bg-emerald-700 px-6 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 active:scale-95"
+                className="rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 active:scale-95"
               >
                 Profil Madrasah
               </Link>

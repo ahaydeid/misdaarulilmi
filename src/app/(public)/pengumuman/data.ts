@@ -5,6 +5,8 @@ export interface Announcement {
   tag: string;
   excerpt: string;
   author?: string;
+  isActive?: boolean;
+  htmlContent?: string;
   content: {
     paragraphs: string[];
     points?: string[];

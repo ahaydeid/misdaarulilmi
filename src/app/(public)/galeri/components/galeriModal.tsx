@@ -4,17 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaChevronLeft, FaChevronRight, FaCalendarDays } from "react-icons/fa6";
 import Modal from "@/app/components/modal";
-
-export interface GalleryItem {
-  type?: "photo" | "video";
-  youtubeId?: string;
-  src: string;
-  images?: string[];
-  title: string;
-  desc: string;
-  date?: string;
-  category?: string;
-}
+import { type GalleryItem } from "../data";
+export type { GalleryItem };
 
 interface GaleriModalProps {
   isOpen: boolean;

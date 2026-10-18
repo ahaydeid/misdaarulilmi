@@ -20,7 +20,7 @@ export default function Footer() {
   const currentYear = 2026;
 
   return (
-    <footer className="bg-white text-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
+    <footer className="bg-gray-50/50 text-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* Kolom 1: Profil / Brand */}

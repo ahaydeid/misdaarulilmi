@@ -69,16 +69,20 @@ export default function KontakPage() {
             </h2>
             <ul className="mt-4 space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
               <li className="flex justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
-                <span>Senin - Kamis</span>
-                <span className="text-emerald-700 font-medium dark:text-white">07.00 - 14.30 WIB</span>
+                <span>Senin</span>
+                <span className="text-emerald-700 font-medium dark:text-white">06.30 - 14.00 WIB</span>
+              </li>
+              <li className="flex justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
+                <span>Selasa - Kamis</span>
+                <span className="text-emerald-700 font-medium dark:text-white">06.30 - 15.00 WIB</span>
               </li>
               <li className="flex justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
                 <span>Jumat</span>
-                <span className="text-emerald-700 font-medium dark:text-white">07.00 - 11.30 WIB</span>
+                <span className="text-emerald-700 font-medium dark:text-white">06.30 - 15.00 WIB</span>
               </li>
               <li className="flex justify-between border-b border-zinc-100 pb-2 dark:border-zinc-800">
                 <span>Sabtu</span>
-                <span className="text-emerald-700 font-medium dark:text-white">07.00 - 13.00 WIB</span>
+                <span className="text-emerald-700 font-medium dark:text-white">06.30 - 12.00 WIB</span>
               </li>
               <li className="flex justify-between pt-1">
                 <span>Ahad & Hari Libur Nasional</span>

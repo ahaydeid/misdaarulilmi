@@ -32,11 +32,9 @@ export default function VideoModal({
       isOpen={isOpen}
       onClose={onClose}
       size="5xl"
-      className="rounded-none bg-black"
-      bodyClassName="p-0"
     >
       {activeId && (
-        <div className="relative aspect-video w-full rounded-none bg-black">
+        <div className="relative aspect-video w-full">
           <iframe
             src={
               isOpen
@@ -46,7 +44,7 @@ export default function VideoModal({
             title={activeTitle || "Video Kegiatan"}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
-            className="absolute inset-0 h-full w-full rounded-none border-0"
+            className="absolute inset-0 h-full w-full"
           />
         </div>
       )}

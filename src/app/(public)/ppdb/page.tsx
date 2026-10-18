@@ -27,7 +27,7 @@ export default function PPDBPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl text-center">
-        <span className="inline-block rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+        <span className="inline-block text-xs font-medium text-emerald-700 dark:text-emerald-300">
           Tahun Ajaran 2026/2027
         </span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
@@ -62,7 +62,7 @@ export default function PPDBPage() {
           <div className="mt-6 space-y-5">
             {steps.map((st) => (
               <div key={st.step} className="flex items-start gap-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 font-bold text-white text-sm shadow-xs">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 font-bold text-white text-sm shadow-xs">
                   {st.step}
                 </div>
                 <div>

@@ -1,6 +1,6 @@
 export default function AdminDashboardPage() {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded bg-white p-6 dark:bg-zinc-900">
       <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
         Dashboard
       </h1>

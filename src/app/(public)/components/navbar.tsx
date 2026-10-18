@@ -179,10 +179,10 @@ export default function Navbar() {
                   Pengumuman
                 </Link>
                 <Link
-                  href="/kalender-akademik"
+                  href="/kalender-pendidikan"
                   className="block rounded-lg px-3 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
                 >
-                  Kalender Akademik
+                  Kalender Pendidikan
                 </Link>
               </div>
             </div>

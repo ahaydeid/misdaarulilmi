@@ -89,29 +89,38 @@ export default async function PengumumanDetailPage({ params }: PageProps) {
 
         {/* Isi Pengumuman Lengkap */}
         <div className="mt-6 space-y-4 text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
-          {item.content.paragraphs.map((para, idx) => (
-            <p key={idx}>{para}</p>
-          ))}
+          {item.htmlContent ? (
+            <div
+              className="prose dark:prose-invert max-w-none space-y-3 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: item.htmlContent }}
+            />
+          ) : (
+            <>
+              {item.content.paragraphs.map((para, idx) => (
+                <p key={idx}>{para}</p>
+              ))}
 
-          {/* Poin-poin Ketentuan jika ada */}
-          {item.content.points && item.content.points.length > 0 && (
-            <div className="my-6 rounded-xl bg-zinc-50 p-5 dark:bg-zinc-800/50">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                Rincian & Ketentuan Pelaksanaan:
-              </h2>
-              <ul className="space-y-2.5">
-                {item.content.points.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm">
-                    <FaCircleCheck className="mt-1 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+              {/* Poin-poin Ketentuan jika ada */}
+              {item.content.points && item.content.points.length > 0 && (
+                <div className="my-6 rounded-xl bg-zinc-50 p-5 dark:bg-zinc-800/50">
+                  <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                    Rincian & Ketentuan Pelaksanaan:
+                  </h2>
+                  <ul className="space-y-2.5">
+                    {item.content.points.map((point, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5 text-sm">
+                        <FaCircleCheck className="mt-1 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-          {item.content.closing && (
-            <p className="pt-2">{item.content.closing}</p>
+              {item.content.closing && (
+                <p className="pt-2">{item.content.closing}</p>
+              )}
+            </>
           )}
 
           {/* Lembar Pengesahan */}

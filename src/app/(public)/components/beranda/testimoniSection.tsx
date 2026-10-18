@@ -34,7 +34,7 @@ const testimonials = [
   {
     quote:
       "Kombinasi sains dan kurikulum keislamannya sangat proporsional. Santri diajarkan berpikir kritis tanpa melupakan pondasi akhlakul karimah sehari-hari.",
-    name: "Budi Santoso",
+    name: "Ahmad Fauzi",
     role: "Wali Santri Kelas V",
   },
 ];
