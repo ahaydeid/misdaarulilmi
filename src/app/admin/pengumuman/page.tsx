@@ -22,7 +22,17 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import Modal from "@/app/components/modal";
-import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import dynamic from "next/dynamic";
+
+const RichTextEditor = dynamic(
+  () => import("@/components/ui/RichTextEditor").then((mod) => mod.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-48 w-full animate-pulse rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800" />
+    ),
+  }
+);
 
 const contentToHtml = (ann: Announcement): string => {
   if (ann.htmlContent) return ann.htmlContent;

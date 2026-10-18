@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import Quill from "quill";
+import type Quill from "quill";
 import "quill/dist/quill.snow.css";
 
 export interface RichTextEditorProps {
@@ -22,43 +22,49 @@ export function RichTextEditor({
   const isUpdatingRef = useRef(false);
 
   useEffect(() => {
+    let isMounted = true;
     if (!containerRef.current) return;
 
-    containerRef.current.innerHTML = "";
-    const editorDiv = document.createElement("div");
-    containerRef.current.appendChild(editorDiv);
+    import("quill").then(({ default: Quill }) => {
+      if (!isMounted || !containerRef.current) return;
 
-    const quill = new Quill(editorDiv, {
-      theme: "snow",
-      placeholder,
-      modules: {
-        toolbar: [
-          [{ header: [1, 2, 3, false] }],
-          ["bold", "italic", "underline", "strike"],
-          [{ color: [] }, { background: [] }],
-          [{ align: [] }],
-          [{ list: "ordered" }, { list: "bullet" }],
-          [{ indent: "-1" }, { indent: "+1" }],
-          [{ script: "sub" }, { script: "super" }],
-          ["blockquote", "link", "image"],
-          ["clean"],
-        ],
-      },
-    });
+      containerRef.current.innerHTML = "";
+      const editorDiv = document.createElement("div");
+      containerRef.current.appendChild(editorDiv);
 
-    quillRef.current = quill;
+      const quill = new Quill(editorDiv, {
+        theme: "snow",
+        placeholder,
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ color: [] }, { background: [] }],
+            [{ align: [] }],
+            [{ list: "ordered" }, { list: "bullet" }],
+            [{ indent: "-1" }, { indent: "+1" }],
+            [{ script: "sub" }, { script: "super" }],
+            ["blockquote", "link", "image"],
+            ["clean"],
+          ],
+        },
+      });
 
-    if (value) {
-      quill.clipboard.dangerouslyPasteHTML(value);
-    }
+      quillRef.current = quill;
 
-    quill.on("text-change", () => {
-      if (isUpdatingRef.current) return;
-      const html = quill.root.innerHTML;
-      onChange(html === "<p><br></p>" ? "" : html);
+      if (value) {
+        quill.clipboard.dangerouslyPasteHTML(value);
+      }
+
+      quill.on("text-change", () => {
+        if (isUpdatingRef.current) return;
+        const html = quill.root.innerHTML;
+        onChange(html === "<p><br></p>" ? "" : html);
+      });
     });
 
     return () => {
+      isMounted = false;
       quillRef.current = null;
     };
   }, []);
