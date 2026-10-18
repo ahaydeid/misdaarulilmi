@@ -3,80 +3,144 @@ import Image from "next/image";
 import {
   FaSchool,
   FaHeart,
-  FaTrophy,
   FaHandshake,
   FaBookQuran,
+  FaLanguage,
+  FaHandsPraying,
   FaMosque,
-  FaCompass,
+  FaMicrophone,
+  FaBookOpen,
+  FaTrophy,
+  FaScroll,
+  FaCampground,
+  FaHandFist,
+  FaPalette,
+  FaPenNib,
+  FaMusic,
+  FaFlag,
+  FaLaptopCode,
   FaFlask,
+  FaBullhorn,
+  FaUsers,
+  FaShieldHalved,
+  FaLightbulb,
+  FaGraduationCap,
 } from "react-icons/fa6";
 import Avatar from "@/components/ui/Avatar";
 
 export const metadata: Metadata = {
   title: "Profil Madrasah",
   description:
-    "Profil lengkap MIS Daarul Ilmi Balaraja. Visi, misi, nilai karakter, program unggulan, dan identitas madrasah.",
+    "Profil lengkap MIS Daarul Ilmi Balaraja. Visi, misi, keunggulan madrasah, dan identitas madrasah.",
 };
 
 const missions = [
   {
     number: "01",
-    title: "Pendidikan Terpadu",
-    desc: "Menyelenggarakan pembelajaran dasar Islam yang seimbang dan terintegrasi antara kurikulum nasional dan muatan keagamaan.",
+    desc: "Mengembangkan sistem pendidikan berlandaskan IMTAQ dan IPTEK.",
     icon: FaSchool,
   },
   {
     number: "02",
-    title: "Pembiasaan Karakter Islami",
-    desc: "Membiasakan ibadah harian, sholat berjamaah, dan pengamalan akhlakul karimah dalam kehidupan sehari-hari santri.",
+    desc: "Membentuk SDM yang Islami, Aktif, Kreatif & Inovatif.",
     icon: FaHeart,
   },
   {
     number: "03",
-    title: "Pengembangan Potensi & Bakat",
-    desc: "Memfasilitasi bakat, minat, kepramukaan, dan kreativitas santri melalui ragam program kokurikuler dan ekstrakurikuler terarah.",
-    icon: FaTrophy,
+    desc: "Membangun kepercayaan & kemitraan dengan Masyarakat & Orang Tua.",
+    icon: FaHandshake,
+  },
+];
+
+const schoolStrengths = [
+  {
+    title: "Membentuk Karakter Religius dan Disiplin",
+    icon: FaMosque,
   },
   {
-    number: "04",
-    title: "Kemitraan Edukatif",
-    desc: "Membangun sinergi harmonis antara madrasah, orang tua wali santri, dan masyarakat dalam mencetak generasi unggul.",
-    icon: FaHandshake,
+    title: "Aman Untuk Anak, Tenang Bagi Orang Tua",
+    icon: FaShieldHalved,
+  },
+  {
+    title: "Pembelajaran Aktif, Kreatif dan Islami",
+    icon: FaLightbulb,
+  },
+  {
+    title: "Siap Mencetak Lulusan Unggulan",
+    icon: FaGraduationCap,
   },
 ];
 
 const featuredPrograms = [
   {
-    title: "Tahfidz & Tahsin Al-Qur'an",
-    desc: "Program hafalan Juz 30 berstandar tajwid dengan pembinaan harian intensif.",
+    title: "Tahfidz Quran ( Juz 30 )",
     icon: FaBookQuran,
   },
   {
-    title: "Pembiasaan Ibadah Harian",
-    desc: "Sholat dhuha berjamaah setiap pagi, doa harian, dan pembiasaan sholat dzuhur terpimpin.",
+    title: "Muhadatsah Arabic and English",
+    icon: FaLanguage,
+  },
+  {
+    title: "Shalat Dhuha",
+    icon: FaHandsPraying,
+  },
+  {
+    title: "Shalat Berjamaah Dzuhur",
     icon: FaMosque,
   },
   {
-    title: "Kepramukaan & Karakter",
-    desc: "Pembentukan jiwa kepemimpinan, kepanduan, gotong royong, dan kemandirian santri.",
-    icon: FaCompass,
+    title: "Praktik Ibadah",
+    icon: FaBookOpen,
   },
   {
-    title: "Sains & Literasi Madrasah",
-    desc: "Penguatan literasi membaca serta eksplorasi sains praktis untuk melatih daya nalar santri.",
-    icon: FaFlask,
+    title: "Pembiasaan Jumat ( Kultum )",
+    icon: FaMicrophone,
   },
+  {
+    title: "Yasin & Tahlil",
+    icon: FaScroll,
+  },
+  {
+    title: "Doa Harian",
+    icon: FaHeart,
+  },
+  {
+    title: "Pengembangan Potensi Akademik dan Non-Akademik",
+    icon: FaTrophy,
+  },
+  {
+    title: "Ngaji Kitab Kuning",
+    icon: FaBookOpen,
+  },
+];
+
+const extracurriculars = [
+  { name: "Pramuka", icon: FaCampground },
+  { name: "KSM", icon: FaFlask },
+  { name: "Pencak Silat", icon: FaHandFist },
+  { name: "Angklung", icon: FaMusic },
+  { name: "Melukis", icon: FaPalette },
+  { name: "Seni Tari", icon: FaUsers },
+  { name: "Marawis", icon: FaMusic },
+  { name: "Qori", icon: FaBookQuran },
+  { name: "Paskibra", icon: FaFlag },
+  { name: "Tahfidz", icon: FaBookOpen },
+  { name: "Khot", icon: FaPenNib },
+  { name: "Komputer", icon: FaLaptopCode },
+  { name: "Paduan Suara", icon: FaUsers },
+  { name: "Pidato", icon: FaBullhorn },
 ];
 
 const schoolIdentity = [
   { label: "Nama Satuan Pendidikan", value: "MIS Daarul Ilmi Balaraja" },
   { label: "Jenjang Pendidikan", value: "Madrasah Ibtidaiyah (MI)" },
   { label: "Status Madrasah", value: "Swasta Terakreditasi" },
+  { label: "Alamat", value: "Jl. Raya Kresek Kp. Jati Baru Ds. Tobat RT. 05/04" },
+  { label: "Kecamatan / Kab.", value: "Balaraja, Kabupaten Tangerang" },
+  { label: "Provinsi", value: "Banten" },
   { label: "Naungan", value: "Kementerian Agama RI" },
   { label: "Kurikulum", value: "Kurikulum Merdeka & Kemenag" },
   { label: "Waktu Belajar", value: "Pagi Hari (Senin – Sabtu)" },
-  { label: "Kecamatan / Kab.", value: "Balaraja, Kabupaten Tangerang" },
-  { label: "Provinsi", value: "Banten" },
 ];
 
 import { staffMembersData as staffMembers } from "./staffData";
@@ -108,8 +172,32 @@ export default function ProfilPage() {
         </div>
       </div>
 
+      {/* Section Keunggulan Madrasah (Brosur Resmi) */}
+      <div className="mt-24 sm:mt-28">
+        <h2 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          Keunggulan Madrasah
+        </h2>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {schoolStrengths.map((item, idx) => {
+            const IconComponent = item.icon;
+            return (
+              <div
+                key={idx}
+                className="flex items-start gap-3.5 rounded-xl bg-white p-5 dark:bg-zinc-900"
+              >
+                <IconComponent className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-semibold leading-snug text-zinc-800 dark:text-zinc-200">
+                  {item.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Section Visi Madrasah (Statement Card) */}
-      <div className="mt-12 rounded-xl bg-zinc-100 p-8 sm:p-12 dark:bg-zinc-900">
+      <div className="mt-24 rounded-xl bg-zinc-100 p-8 sm:mt-28 sm:p-12 dark:bg-zinc-900">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-white">
             <span className="text-emerald-600">Visi</span> Madrasah
@@ -120,13 +208,13 @@ export default function ProfilPage() {
         </div>
       </div>
 
-      {/* Section Misi Madrasah (Numbered Flat Cards dengan Siluet Icon) */}
-      <div className="mt-12">
+      {/* Section Misi Madrasah (3 Butir Resmi Brosur) */}
+      <div className="mt-24 sm:mt-28">
         <h2 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
           Misi Madrasah
         </h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {missions.map((m) => {
             const IconComponent = m.icon;
             return (
@@ -135,13 +223,10 @@ export default function ProfilPage() {
                 className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-white p-6 dark:bg-zinc-900"
               >
                 <div className="relative z-10">
-                  <span className="text-2xl font-bold text-zinc-400 dark:text-zinc-600">
+                  <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-500">
                     {m.number}
                   </span>
-                  <h3 className="mt-3 text-base font-bold text-zinc-900 dark:text-white">
-                    {m.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+                  <p className="mt-3 text-base font-medium leading-relaxed text-zinc-800 dark:text-zinc-200">
                     {m.desc}
                   </p>
                 </div>
@@ -154,31 +239,48 @@ export default function ProfilPage() {
         </div>
       </div>
 
-      {/* Section Program Unggulan (Flat Cards dengan Siluet Icon) */}
-      <div className="mt-16">
-        <h2 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-          Program Unggulan
+      {/* Section Program Unggulan MI Daarul Ilmi (Icon Grid Terbuka Tanpa Card Box) */}
+      <div className="mt-24 sm:mt-28">
+        <h2 className="mb-8 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          Program Unggulan MI Daarul Ilmi
         </h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredPrograms.map((prog) => {
+        <div className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 md:grid-cols-5 md:gap-y-14">
+          {featuredPrograms.map((prog, idx) => {
             const IconComponent = prog.icon;
             return (
               <div
-                key={prog.title}
-                className="relative flex flex-col justify-between overflow-hidden rounded-xl bg-white p-6 dark:bg-zinc-900"
+                key={idx}
+                className="flex flex-col items-center justify-start gap-3 text-center"
               >
-                <div className="relative z-10">
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
-                    {prog.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-                    {prog.desc}
-                  </p>
-                </div>
+                <IconComponent className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-xs font-semibold leading-snug text-zinc-800 sm:text-sm dark:text-zinc-200">
+                  {prog.title}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-                {/* Siluet Icon Watermark */}
-                <IconComponent className="pointer-events-none absolute -bottom-3 -right-3 text-7xl text-zinc-900/[0.04] dark:text-white/[0.04]" />
+      {/* Section Ekstrakurikuler (List Bergaris Divider Rapat & Proporsional) */}
+      <div className="mt-24 sm:mt-28">
+        <h2 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          Ekstrakurikuler
+        </h2>
+
+        <div className="grid grid-cols-2 gap-x-8 sm:grid-cols-3 md:grid-cols-4">
+          {extracurriculars.map((ekskul, idx) => {
+            const IconComponent = ekskul.icon;
+            return (
+              <div
+                key={idx}
+                className="flex items-center gap-3 border-b border-zinc-200/60 py-2.5 dark:border-zinc-800"
+              >
+                <IconComponent className="h-4.5 w-4.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                  {ekskul.name}
+                </span>
               </div>
             );
           })}
@@ -186,7 +288,7 @@ export default function ProfilPage() {
       </div>
 
       {/* Section Staff Dan Tendik (Sliding 1 Baris Tanpa Card Pembungkus) */}
-      <div className="mt-16">
+      <div className="mt-24 sm:mt-28">
         <style>{`
           @keyframes staff-marquee {
             0% {
@@ -237,7 +339,7 @@ export default function ProfilPage() {
       </div>
 
       {/* Section Identitas Satuan Pendidikan (Tabel Data Ringkas & Flat) */}
-      <div className="mt-16">
+      <div className="mt-24 sm:mt-28">
         <h2 className="mb-6 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
           Identitas Satuan Pendidikan
         </h2>

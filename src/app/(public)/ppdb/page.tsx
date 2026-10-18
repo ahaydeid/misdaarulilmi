@@ -85,17 +85,60 @@ export default function PPDBPage() {
           Butuh Bantuan Pendaftaran?
         </h2>
         <p className="mt-2 text-sm text-emerald-800 dark:text-emerald-300">
-          Hubungi panitia PPDB MIS Daarul Ilmi melalui WhatsApp untuk informasi kuota, jadwal observasi, dan formulir.
+          Hubungi panitia PPDB MIS Daarul Ilmi melalui WhatsApp untuk informasi kuota, jadwal observasi, dan formulir pendaftaran:
         </p>
-        <div className="mt-6">
+
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">
           <a
-            href="https://wa.me"
+            href="https://wa.me/6281287931380"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-emerald-700"
+            className="flex items-center justify-between rounded-xl bg-white p-3.5 text-xs shadow-2xs transition hover:scale-105 hover:bg-emerald-600 hover:text-white dark:bg-zinc-900 dark:hover:bg-emerald-600"
           >
-            <FaWhatsapp className="h-5 w-5" />
-            Hubungi Panitia PPDB (WhatsApp)
+            <div className="text-left">
+              <div className="font-semibold text-zinc-900 dark:text-white">Ibu Wanti</div>
+              <div className="text-zinc-500 dark:text-zinc-400">0812-8793-1380</div>
+            </div>
+            <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+          </a>
+
+          <a
+            href="https://wa.me/6285694605981"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-xl bg-white p-3.5 text-xs shadow-2xs transition hover:scale-105 hover:bg-emerald-600 hover:text-white dark:bg-zinc-900 dark:hover:bg-emerald-600"
+          >
+            <div className="text-left">
+              <div className="font-semibold text-zinc-900 dark:text-white">Ibu Silvi</div>
+              <div className="text-zinc-500 dark:text-zinc-400">0856-9460-5981</div>
+            </div>
+            <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+          </a>
+
+          <a
+            href="https://wa.me/6285319307900"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-xl bg-white p-3.5 text-xs shadow-2xs transition hover:scale-105 hover:bg-emerald-600 hover:text-white dark:bg-zinc-900 dark:hover:bg-emerald-600"
+          >
+            <div className="text-left">
+              <div className="font-semibold text-zinc-900 dark:text-white">Ibu Yati</div>
+              <div className="text-zinc-500 dark:text-zinc-400">0853-1930-7900</div>
+            </div>
+            <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+          </a>
+
+          <a
+            href="https://wa.me/6281311507042"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-xl bg-white p-3.5 text-xs shadow-2xs transition hover:scale-105 hover:bg-emerald-600 hover:text-white dark:bg-zinc-900 dark:hover:bg-emerald-600"
+          >
+            <div className="text-left">
+              <div className="font-semibold text-zinc-900 dark:text-white">Ibu Rum</div>
+              <div className="text-zinc-500 dark:text-zinc-400">0813-1150-7042</div>
+            </div>
+            <FaWhatsapp className="h-4 w-4 text-emerald-600" />
           </a>
         </div>
       </div>

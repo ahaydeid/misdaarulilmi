@@ -28,34 +28,77 @@ export default function KontakPage() {
 
           <div className="space-y-5 text-sm text-zinc-600 dark:text-zinc-400">
             <div className="flex items-start gap-3.5">
-              <FaLocationDot className="mt-1 h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500" />
+              <FaLocationDot className="mt-1 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-500" />
               <div>
                 <strong className="block text-zinc-900 dark:text-zinc-100">Alamat Madrasah</strong>
-                <span>Jl. Raya Madrasah, Kp. Contoh, Balaraja, Kabupaten Tangerang, Banten</span>
+                <span>Jl. Raya Kresek Kp. Jati Baru Ds. Tobat RT. 05/04 Kec. Balaraja Kab. Tangerang, Banten</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5">
-              <FaPhone className="h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500" />
-              <div>
-                <strong className="block text-zinc-900 dark:text-zinc-100">Telepon</strong>
-                <span>(021) 1234-5678</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3.5">
-              <FaEnvelope className="h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500" />
+            <div className="flex items-start gap-3.5">
+              <FaEnvelope className="mt-1 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-500" />
               <div>
                 <strong className="block text-zinc-900 dark:text-zinc-100">Email Resmi</strong>
                 <span>info@misdaarulilmi.sch.id</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5">
-              <FaWhatsapp className="h-5 w-5 shrink-0 text-zinc-400 dark:text-zinc-500" />
-              <div>
-                <strong className="block text-zinc-900 dark:text-zinc-100">WhatsApp Pelayanan</strong>
-                <span>+62 812-3456-7890</span>
+            <div className="pt-2">
+              <strong className="mb-3 block text-zinc-900 dark:text-zinc-100">
+                Contact Person & WhatsApp Resmi
+              </strong>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a
+                  href="https://wa.me/6281287931380"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-800/80 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
+                >
+                  <div>
+                    <div className="font-semibold text-zinc-900 dark:text-white">Ibu Wanti</div>
+                    <div className="text-zinc-500 dark:text-zinc-400">0812-8793-1380</div>
+                  </div>
+                  <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+                </a>
+
+                <a
+                  href="https://wa.me/6285694605981"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-800/80 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
+                >
+                  <div>
+                    <div className="font-semibold text-zinc-900 dark:text-white">Ibu Silvi</div>
+                    <div className="text-zinc-500 dark:text-zinc-400">0856-9460-5981</div>
+                  </div>
+                  <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+                </a>
+
+                <a
+                  href="https://wa.me/6285319307900"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-800/80 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
+                >
+                  <div>
+                    <div className="font-semibold text-zinc-900 dark:text-white">Ibu Yati</div>
+                    <div className="text-zinc-500 dark:text-zinc-400">0853-1930-7900</div>
+                  </div>
+                  <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+                </a>
+
+                <a
+                  href="https://wa.me/6281311507042"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-800/80 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
+                >
+                  <div>
+                    <div className="font-semibold text-zinc-900 dark:text-white">Ibu Rum</div>
+                    <div className="text-zinc-500 dark:text-zinc-400">0813-1150-7042</div>
+                  </div>
+                  <FaWhatsapp className="h-4 w-4 text-emerald-600" />
+                </a>
               </div>
             </div>
           </div>
@@ -93,7 +136,7 @@ export default function KontakPage() {
 
           <div className="mt-8">
             <a
-              href="https://wa.me"
+              href="https://wa.me/6281287931380"
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-emerald-700"

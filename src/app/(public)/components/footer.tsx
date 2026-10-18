@@ -76,7 +76,7 @@ export default function Footer() {
                 <FaYoutube className="h-4 w-4" />
               </a>
               <a
-                href="https://wa.me"
+                href="https://wa.me/6281287931380"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
@@ -114,8 +114,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/kalender-akademik" className="transition hover:text-emerald-600 dark:hover:text-emerald-400">
-                  Kalender Akademik
+                <Link href="/kalender-pendidikan" className="transition hover:text-emerald-600 dark:hover:text-emerald-400">
+                  Kalender Pendidikan
                 </Link>
               </li>
             </ul>
@@ -148,11 +148,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
               <li className="flex items-start gap-3">
                 <FaLocationDot className="mt-1 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                <span>Jl. Raya Madrasah, Kp. Contoh, Kec. Wilayah, Kab. Daerah</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <FaPhone className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                <span>(021) 1234-5678</span>
+                <span>Jl. Raya Kresek Kp. Jati Baru Ds. Tobat RT. 05/04 Kec. Balaraja Kab. Tangerang, Banten</span>
               </li>
               <li className="flex items-center gap-3">
                 <FaEnvelope className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
@@ -160,7 +156,11 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <FaWhatsapp className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                <span>+62 812-3456-7890</span>
+                <span>+62 812-8793-1380 (Ibu Wanti)</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <FaWhatsapp className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
+                <span>+62 856-9460-5981 (Ibu Silvi)</span>
               </li>
             </ul>
           </div>

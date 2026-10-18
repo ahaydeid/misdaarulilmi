@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa6";
 
 const socialMediaLinks = [
-  { href: "https://wa.me", label: "WhatsApp", icon: FaWhatsapp },
+  { href: "https://wa.me/6281287931380", label: "WhatsApp", icon: FaWhatsapp },
   { href: "https://instagram.com", label: "Instagram", icon: FaInstagram },
   { href: "https://facebook.com", label: "Facebook", icon: FaFacebook },
   { href: "https://youtube.com", label: "YouTube", icon: FaYoutube },

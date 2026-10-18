@@ -9,8 +9,12 @@ export default function SekilasMadrasah() {
           Sekilas Madrasah
         </h2>
 
-        <p className="mt-6 text-base leading-relaxed text-white sm:text-lg">
-          Madrasah Ibtidaiyah Daarul Ilmi berdiri sejak 2012, terdaftar di Kementerian Agama (NSM 11236030271) dan Terakreditasi B. Berlokasi di Lingkungan yang aman, Nyaman dan Strategis ±100 M dari jalan raya.
+        <p className="mt-3 text-lg font-medium text-emerald-100 sm:text-xl">
+          &ldquo;Tempat Belajar, Beribadah, dan Berkarakter.&rdquo;
+        </p>
+
+        <p className="mt-6 text-base leading-relaxed text-emerald-50 sm:text-lg">
+          Madrasah Ibtidaiyah Daarul Ilmi berdiri sejak 2012, terdaftar di Kementerian Agama (NSM 11236030271) dan Terakreditasi B. Berlokasi di Lingkungan yang aman, Nyaman dan Strategis ±100 M dari jalan raya (Jl. Raya Kresek Kp. Jati Baru Ds. Tobat, Balaraja).
         </p>
 
         <div className="mt-8 flex justify-center">
