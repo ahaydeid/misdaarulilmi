@@ -1,45 +1,9 @@
-import { FaQuoteLeft, FaUser } from "react-icons/fa6";
-
-const testimonials = [
-  {
-    quote:
-      "Alhamdulillah sejak bersekolah di Daarul Ilmi, ananda lebih tertib sholat lima waktu dan hafalan surat pendeknya berkembang pesat tanpa harus dipaksa di rumah.",
-    name: "Nurhasanah",
-    role: "Wali Santri Kelas II",
-  },
-  {
-    quote:
-      "Bapak dan Ibu guru sangat komunikatif dan perhatian. Pendekatan pembelajarannya seimbang antara mata pelajaran umum dan penanaman adab keagamaan.",
-    name: "Ahmad Fauzi",
-    role: "Wali Santri Kelas IV",
-  },
-  {
-    quote:
-      "Kegiatan kepramukaan dan pembiasaan sholat dhuha benar-benar membentuk kemandirian anak kami. Sangat bersyukur menyekolahkan ananda di madrasah ini.",
-    name: "Siti Rahmawati",
-    role: "Wali Santri Kelas VI",
-  },
-  {
-    quote:
-      "Bimbingan tahfidz dan tahsinnya luar biasa telaten. Bacaan Al-Qur'an anak saya menjadi jauh lebih tartil sesuai kaidah tajwid dan hafalannya lancar.",
-    name: "Hendra Pratama",
-    role: "Wali Santri Kelas III",
-  },
-  {
-    quote:
-      "Awalnya khawatir saat ananda masuk kelas 1, tapi lingkungan madrasah yang ramah dan guru yang sabar membuat anak kami langsung betah dan semangat belajar.",
-    name: "Rina Marlina",
-    role: "Wali Santri Kelas I",
-  },
-  {
-    quote:
-      "Kombinasi sains dan kurikulum keislamannya sangat proporsional. Santri diajarkan berpikir kritis tanpa melupakan pondasi akhlakul karimah sehari-hari.",
-    name: "Ahmad Fauzi",
-    role: "Wali Santri Kelas V",
-  },
-];
+import { FaQuoteLeft } from "react-icons/fa6";
+import Avatar from "@/components/ui/Avatar";
+import { testimonialsData } from "./testimoniData";
 
 export default function TestimoniSection() {
+  const activeTestimonials = testimonialsData.filter((t) => t.isActive !== false);
   return (
     <section className="py-20 sm:py-28 overflow-hidden">
       <style>{`
@@ -60,7 +24,7 @@ export default function TestimoniSection() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-10">
         <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
-          Apa Kata Wali Murid
+          Apa Kata Mereka
         </h2>
       </div>
 
@@ -72,7 +36,7 @@ export default function TestimoniSection() {
 
         {/* Sliding Cards */}
         <div className="marquee-track flex gap-6 pr-6">
-          {[...testimonials, ...testimonials].map((testi, idx) => (
+          {[...activeTestimonials, ...activeTestimonials].map((testi, idx) => (
             <div
               key={idx}
               className="w-[320px] sm:w-[380px] shrink-0 flex flex-col justify-between rounded-2xl bg-zinc-100 p-7 dark:bg-zinc-800/80"
@@ -85,12 +49,11 @@ export default function TestimoniSection() {
               </div>
 
               <div className="mt-6 flex items-center gap-3.5 border-t border-zinc-200/80 pt-4 dark:border-zinc-700">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-500 text-white dark:bg-slate-600"
-                  aria-hidden="true"
-                >
-                  <FaUser className="h-5 w-5" />
-                </div>
+                <Avatar
+                  name={testi.name}
+                  size="smedium"
+                  className="!w-10 !h-10 shrink-0"
+                />
 
                 <div>
                   <p className="font-bold text-sm text-zinc-900 dark:text-white">

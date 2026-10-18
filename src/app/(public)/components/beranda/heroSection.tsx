@@ -97,21 +97,36 @@ export default function HeroSection() {
           </div>
 
           {/* Gambar Maskot Hero (murid-hero.png) dengan Aksen Blob */}
+          {/* Gambar Maskot Hero (Foto Utama dengan Aksen Blob Asimetris Lembut) */}
           <div className="relative flex items-center justify-center lg:col-span-5">
-            {/* Aksen Blob Organik Belakang */}
+            {/* Ambient Glow Halus */}
             <div
-              className="pointer-events-none absolute h-80 w-80 sm:h-[400px] sm:w-[400px] lg:h-[440px] lg:w-[440px] rounded-[48%_52%_68%_32%/42%_38%_62%_58%] bg-emerald-100 dark:bg-emerald-900/60"
+              className="pointer-events-none absolute h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-900/30"
               aria-hidden="true"
             />
 
-            {/* Gambar Maskot */}
-            <div className="relative aspect-square w-full max-w-lg lg:max-w-[480px]">
+            {/* Aksen Blob Organik Asimetris (Bentuk Tidak Beraturan & Pas di Belakang Foto) */}
+            <svg
+              className="pointer-events-none absolute top-2 sm:top-0 -left-2 sm:-left-4 h-[105%] w-[105%] max-w-[510px] text-emerald-100/80 dark:text-emerald-950/40"
+              viewBox="0 0 200 200"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,79.6,-45.8C87.4,-32.5,90,-16.3,88.5,-0.9C87,14.6,81.4,29.1,73.1,41.9C64.8,54.7,53.8,65.7,40.8,72.4C27.7,79.1,12.7,81.5,-2.2,85.3C-17.1,89.1,-31.9,94.3,-45.3,89.6C-58.7,84.9,-70.7,70.3,-78.9,54.7C-87.1,39.1,-91.5,22.5,-90.7,6.2C-89.9,-10.1,-83.9,-26.1,-75.1,-39.8C-66.3,-53.5,-54.7,-64.9,-41.4,-72.6C-28.1,-80.3,-13.1,-84.3,1.3,-86.6C15.7,-88.9,30.6,-83.6,44.7,-76.4Z"
+                transform="translate(94 102) scale(0.90)"
+              />
+            </svg>
+
+            {/* Foto Maskot Santri (Pemeran Utama dengan Gradasi Melengkung Nyata ke Bawah) */}
+            <div className="relative aspect-square w-full max-w-[400px] sm:max-w-[480px] lg:max-w-[520px] [mask-image:radial-gradient(ellipse_75%_68%_at_50%_25%,black_50%,transparent_90%)] [-webkit-mask-image:radial-gradient(ellipse_75%_68%_at_50%_25%,black_50%,transparent_90%)]">
               <Image
                 src="/img/murid-hero.png"
                 alt="Santri MIS Daarul Ilmi Balaraja"
                 fill
                 sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-contain"
+                className="object-contain object-bottom"
                 priority
               />
             </div>

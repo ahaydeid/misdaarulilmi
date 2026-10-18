@@ -9,8 +9,8 @@ import {
   FaMosque,
   FaCompass,
   FaFlask,
-  FaUser,
 } from "react-icons/fa6";
+import Avatar from "@/components/ui/Avatar";
 
 export const metadata: Metadata = {
   title: "Profil Madrasah",
@@ -79,40 +79,7 @@ const schoolIdentity = [
   { label: "Provinsi", value: "Banten" },
 ];
 
-const staffMembers = [
-  {
-    name: "H. Ahmad Nawawi, S.Pd.I",
-    subject: "Kepala Madrasah & Tahfidz",
-  },
-  {
-    name: "Siti Maryam, S.Pd.",
-    subject: "Tematik & Matematika",
-  },
-  {
-    name: "M. Rizki Fadillah, S.Pd.I",
-    subject: "Fiqih & Bahasa Arab",
-  },
-  {
-    name: "Nurul Hidayah, S.Pd.",
-    subject: "IPA & Bahasa Indonesia",
-  },
-  {
-    name: "Fajar Shodiq, S.Kom.",
-    subject: "TIK & Kepramukaan",
-  },
-  {
-    name: "Halimah, S.Ag.",
-    subject: "Al-Qur'an Hadits & Akidah",
-  },
-  {
-    name: "Dedi Kurniawan, S.Pd.",
-    subject: "Penjasorkes (PJOK)",
-  },
-  {
-    name: "Eka Rahmawati, S.E.",
-    subject: "Tata Usaha & Administrasi",
-  },
-];
+import { staffMembersData as staffMembers } from "./staffData";
 
 export default function ProfilPage() {
   return (
@@ -148,7 +115,7 @@ export default function ProfilPage() {
             <span className="text-emerald-600">Visi</span> Madrasah
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-zinc-700 sm:text-xl dark:text-zinc-200">
-            &ldquo;Terwujudnya generasi Islam yang berakhlak mulia, unggul dalam prestasi akademik dan non-akademik, serta berpegang teguh pada nilai-nilai Al-Qur&apos;an dan As-Sunnah.&rdquo;
+            &ldquo;Membentuk Generasi Muslim Yang Beriman, Bertaqwa, Mulia, Cerdas dan Terampil Serta Mandiri.&rdquo;
           </p>
         </div>
       </div>
@@ -252,9 +219,11 @@ export default function ProfilPage() {
                 key={idx}
                 className="w-48 sm:w-56 shrink-0 flex flex-col items-center text-center"
               >
-                <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
-                  <FaUser className="h-8 w-8 sm:h-10 sm:w-10" />
-                </div>
+                <Avatar
+                  name={staff.name}
+                  photo={staff.photo}
+                  className="!w-20 !h-20 sm:!w-24 sm:!h-24 shadow-xs"
+                />
                 <h3 className="mt-3 text-sm font-semibold text-zinc-900 sm:text-base dark:text-white">
                   {staff.name}
                 </h3>

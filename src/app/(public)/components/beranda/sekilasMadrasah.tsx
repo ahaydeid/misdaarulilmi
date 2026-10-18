@@ -10,7 +10,7 @@ export default function SekilasMadrasah() {
         </h2>
 
         <p className="mt-6 text-base leading-relaxed text-white sm:text-lg">
-          MIS Daarul Ilmi hadir untuk mendampingi masa tumbuh kembang putra-putri Anda pada fase pendidikan dasar. Kami memadukan keunggulan kurikulum nasional dengan pembiasaan adab dan nilai-nilai Al-Qur&apos;an demi membentuk generasi yang cerdas secara intelektual serta luhur budi pekertinya.
+          Madrasah Ibtidaiyah Daarul Ilmi berdiri sejak 2012, terdaftar di Kementerian Agama (NSM 11236030271) dan Terakreditasi B. Berlokasi di Lingkungan yang aman, Nyaman dan Strategis ±100 M dari jalan raya.
         </p>
 
         <div className="mt-8 flex justify-center">

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react'
 
 // Local helper to resolve photo source

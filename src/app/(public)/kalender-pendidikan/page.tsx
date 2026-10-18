@@ -1,55 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import Modal from "@/app/components/modal";
+import {
+  calendarEventsData,
+  monthNames,
+  dayNames,
+  type CalendarEventItem,
+  type EventCategory,
+} from "./data";
 
-const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+// Helper mencocokkan apakah tanggal tertentu berada dalam jadwal agenda
+const isDateInEvent = (
+  ev: CalendarEventItem,
+  year: number,
+  month: number,
+  day: number
+): boolean => {
+  const m = String(month + 1).padStart(2, "0");
+  const d = String(day).padStart(2, "0");
+  const targetDateStr = `${year}-${m}-${d}`;
 
-const monthNames = [
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember",
-];
+  if (!ev.endDate || ev.endDate === ev.startDate) {
+    return ev.startDate === targetDateStr;
+  }
+  return targetDateStr >= ev.startDate && targetDateStr <= ev.endDate;
+};
 
-// Data agenda kalender akademik
-interface AcademicEvent {
-  year: number;
-  month: number; // 0-indexed
-  day: number;
-  title: string;
-  type: "libur" | "ujian" | "kegiatan";
-}
+// Styling pill pada grid kalender sesuai kategori
+const getCategoryPillClass = (cat: EventCategory): string => {
+  switch (cat) {
+    case "Akademik":
+      return "bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300";
+    case "Kegiatan":
+      return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300";
+    case "Hari Libur":
+      return "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300";
+    default:
+      return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+  }
+};
 
-const academicEvents: AcademicEvent[] = [
-  { year: 2026, month: 6, day: 13, title: "Masa Pengenalan Lingkungan Madrasah (MPLM)", type: "kegiatan" },
-  { year: 2026, month: 6, day: 16, title: "Awal Masuk KBM Semester Ganjil", type: "kegiatan" },
-  { year: 2026, month: 7, day: 17, title: "HUT Kemerdekaan RI Ke-81", type: "libur" },
-  { year: 2026, month: 8, day: 21, title: "Mulai Penilaian Tengah Semester (PTS)", type: "ujian" },
-  { year: 2026, month: 8, day: 26, title: "Selesai Penilaian Tengah Semester (PTS)", type: "ujian" },
-  { year: 2026, month: 9, day: 10, title: "Pembagian Raport Tengah Semester", type: "kegiatan" },
-  { year: 2026, month: 9, day: 22, title: "Peringatan Hari Santri Nasional", type: "kegiatan" },
-  { year: 2026, month: 11, day: 7, title: "Penilaian Akhir Semester (PAS) Ganjil", type: "ujian" },
-  { year: 2026, month: 11, day: 19, title: "Pembagian Rapor Semester Ganjil", type: "kegiatan" },
-  { year: 2026, month: 11, day: 25, title: "Hari Raya Natal", type: "libur" },
-  { year: 2027, month: 0, day: 1, title: "Tahun Baru Masehi", type: "libur" },
-  { year: 2027, month: 0, day: 4, title: "Awal KBM Semester Genap", type: "kegiatan" },
-];
+// Styling badge kategori pada modal detail agenda
+const getCategoryBadgeClass = (cat: EventCategory): string => {
+  switch (cat) {
+    case "Akademik":
+      return "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300";
+    case "Kegiatan":
+      return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300";
+    case "Hari Libur":
+      return "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300";
+    default:
+      return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300";
+  }
+};
 
 export default function KalenderAkademikPage() {
   // Inisialisasi pada Oktober 2026 (bulan aktif kalender)
   const [currentYear, setCurrentYear] = useState<number>(2026);
   const [currentMonth, setCurrentMonth] = useState<number>(9); // Oktober (0-indexed = 9)
   const [modalDay, setModalDay] = useState<number | null>(null);
+
+  // Status hari ini (diambil dalam useEffect agar kompatibel dengan prerender Next.js)
+  const [todayInfo, setTodayInfo] = useState<{
+    date: number;
+    month: number;
+    year: number;
+    dayOfWeek: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const now = new Date();
+    setTodayInfo({
+      date: now.getDate(),
+      month: now.getMonth(),
+      year: now.getFullYear(),
+      dayOfWeek: now.getDay(),
+    });
+  }, []);
 
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -82,26 +111,17 @@ export default function KalenderAkademikPage() {
   const totalCells = firstDayOfWeek + daysInMonth;
   const trailingDays = (7 - (totalCells % 7)) % 7;
 
-  // Agenda pada bulan yang sedang dilihat
-  const monthEvents = academicEvents.filter(
-    (ev) => ev.year === currentYear && ev.month === currentMonth
-  );
-
-  // Status hari ini (statis untuk panel Agenda Hari Ini)
-  const today = new Date();
-  const todayDate = today.getDate();
-  const todayMonth = today.getMonth();
-  const todayYear = today.getFullYear();
   const isCurrentMonthActive =
-    currentMonth === todayMonth && currentYear === todayYear;
+    todayInfo !== null &&
+    currentMonth === todayInfo.month &&
+    currentYear === todayInfo.year;
 
   // Agenda khusus hari ini (tidak terpengaruh klik kalender)
-  const todayEvents = academicEvents.filter(
-    (ev) =>
-      ev.year === todayYear &&
-      ev.month === todayMonth &&
-      ev.day === todayDate
-  );
+  const todayEvents = todayInfo
+    ? calendarEventsData.filter((ev) =>
+        isDateInEvent(ev, todayInfo.year, todayInfo.month, todayInfo.date)
+      )
+    : [];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
@@ -176,13 +196,10 @@ export default function KalenderAkademikPage() {
               const dayOfWeek = (firstDayOfWeek + idx) % 7;
               const isSunday = dayOfWeek === 0;
               const isFriday = dayOfWeek === 5;
-              const isToday = isCurrentMonthActive && day === todayDate;
+              const isToday = isCurrentMonthActive && day === todayInfo?.date;
               const isSelected = modalDay === day;
-              const dayEvents = academicEvents.filter(
-                (ev) =>
-                  ev.year === currentYear &&
-                  ev.month === currentMonth &&
-                  ev.day === day
+              const dayEvents = calendarEventsData.filter((ev) =>
+                isDateInEvent(ev, currentYear, currentMonth, day)
               );
 
               return (
@@ -222,13 +239,9 @@ export default function KalenderAkademikPage() {
                         <span
                           key={evIdx}
                           title={ev.title}
-                          className={`block w-full truncate rounded px-1 py-0.5 text-[9px] font-medium leading-tight sm:text-[10px] ${
-                            ev.type === "libur"
-                              ? "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"
-                              : ev.type === "ujian"
-                              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
-                              : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
-                          }`}
+                          className={`block w-full truncate rounded px-1 py-0.5 text-[9px] font-medium leading-tight sm:text-[10px] ${getCategoryPillClass(
+                            ev.category
+                          )}`}
                         >
                           {ev.title}
                         </span>
@@ -264,7 +277,9 @@ export default function KalenderAkademikPage() {
                 Agenda Hari Ini
               </h2>
               <p className="mt-0.5 text-xs text-zinc-400">
-                {dayNames[today.getDay()]}, {todayDate} {monthNames[todayMonth]} {todayYear}
+                {todayInfo
+                  ? `${dayNames[todayInfo.dayOfWeek]}, ${todayInfo.date} ${monthNames[todayInfo.month]} ${todayInfo.year}`
+                  : "-"}
               </p>
             </div>
 
@@ -279,8 +294,8 @@ export default function KalenderAkademikPage() {
                       <p className="text-xs sm:text-sm font-medium text-zinc-800 dark:text-zinc-200">
                         {ev.title}
                       </p>
-                      <span className="text-[11px] text-zinc-400 capitalize">
-                        {ev.type}
+                      <span className="text-[11px] text-zinc-400">
+                        {ev.category}
                       </span>
                     </div>
                   </li>
@@ -307,11 +322,8 @@ export default function KalenderAkademikPage() {
         size="xl"
       >
         {modalDay !== null && (() => {
-          const events = academicEvents.filter(
-            (ev) =>
-              ev.year === currentYear &&
-              ev.month === currentMonth &&
-              ev.day === modalDay
+          const events = calendarEventsData.filter((ev) =>
+            isDateInEvent(ev, currentYear, currentMonth, modalDay)
           );
 
           if (events.length === 0) {
@@ -334,24 +346,18 @@ export default function KalenderAkademikPage() {
                       <h4 className="text-sm font-semibold text-zinc-900 dark:text-white">
                         {ev.title}
                       </h4>
-                      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                        {ev.type === "libur"
-                          ? "Hari Libur Resmi"
-                          : ev.type === "ujian"
-                          ? "Penilaian / Evaluasi Siswa"
-                          : "Kegiatan Pembelajaran & Pembiasaan"}
-                      </p>
+                      {ev.description && (
+                        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          {ev.description}
+                        </p>
+                      )}
                     </div>
                     <span
-                      className={`inline-flex shrink-0 items-center rounded-xs px-2 py-0.5 text-[11px] font-medium capitalize ${
-                        ev.type === "libur"
-                          ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
-                          : ev.type === "ujian"
-                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
-                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
-                      }`}
+                      className={`inline-flex shrink-0 items-center rounded-xs px-2 py-0.5 text-[11px] font-medium ${getCategoryBadgeClass(
+                        ev.category
+                      )}`}
                     >
-                      {ev.type}
+                      {ev.category}
                     </span>
                   </div>
                 </li>
