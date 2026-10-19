@@ -19,6 +19,7 @@ import {
   TableRow,
   TableHeaderCell,
   TableCell,
+  TablePagination,
 } from "@/components/ui/Table";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
@@ -54,6 +55,8 @@ export default function AdminKalenderPage() {
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,7 +95,7 @@ export default function AdminKalenderPage() {
     };
   }, []);
 
-  // Filter Data
+  // Filter Data (Global Search & Category)
   const filteredData = data.filter((item) => {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -101,6 +104,12 @@ export default function AdminKalenderPage() {
       selectedCategory === "Semua" || item.category === selectedCategory;
     return matchSearch && matchCategory;
   });
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -273,15 +282,26 @@ export default function AdminKalenderPage() {
         </Button>
       </div>
 
-      {/* Table Controls (Pencarian & Filter) */}
+      {/* Table Controls (Pencarian, Filter & Baris Per Halaman) */}
       <TableControls
         searchTerm={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Cari agenda..."
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       >
         <TableFilterSelect
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
         >
           <option value="Semua">Semua</option>
           {categories.map((c) => (
@@ -337,10 +357,10 @@ export default function AdminKalenderPage() {
                 </TableCell>
               </TableRow>
             ) : (
-            filteredData.map((item, idx) => (
+            paginatedData.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
-                  {idx + 1}
+                  {(currentPage - 1) * pageSize + idx + 1}
                 </TableCell>
                 <TableCell className="max-w-xs truncate" title={item.title}>
                   {item.title}
@@ -379,6 +399,14 @@ export default function AdminKalenderPage() {
           )}
         </TableBody>
       </Table>
+      )}
+
+      {!isLoading && filteredData.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {/* Modal Form Tambah / Ubah Agenda */}

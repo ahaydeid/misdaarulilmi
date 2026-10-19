@@ -60,33 +60,6 @@ export default function KontakPage() {
                   </div>
                   <FaWhatsapp className="h-4 w-4 text-emerald-600" />
                 </a>
-
-                <a
-                  href="https://wa.me/6285694605981"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-800/80 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
-                >
-                  <div>
-                    <div className="font-semibold text-zinc-900 dark:text-white">Ibu Silvi</div>
-                    <div className="text-zinc-500 dark:text-zinc-400">0856-9460-5981</div>
-                  </div>
-                  <FaWhatsapp className="h-4 w-4 text-emerald-600" />
-                </a>
-
-                <a
-                  href="https://wa.me/6285319307900"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-xl border border-zinc-200 bg-white p-3 text-xs transition hover:border-emerald-500 hover:text-emerald-700 dark:border-zinc-800 dark:bg-zinc-800/80 dark:hover:border-emerald-600 dark:hover:text-emerald-400"
-                >
-                  <div>
-                    <div className="font-semibold text-zinc-900 dark:text-white">Ibu Yati</div>
-                    <div className="text-zinc-500 dark:text-zinc-400">0853-1930-7900</div>
-                  </div>
-                  <FaWhatsapp className="h-4 w-4 text-emerald-600" />
-                </a>
-
                 <a
                   href="https://wa.me/6281311507042"
                   target="_blank"

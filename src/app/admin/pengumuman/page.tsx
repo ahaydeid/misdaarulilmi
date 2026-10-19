@@ -21,6 +21,7 @@ import {
   TableRow,
   TableHeaderCell,
   TableCell,
+  TablePagination,
 } from "@/components/ui/Table";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
@@ -50,6 +51,8 @@ export default function AdminPengumumanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,7 +91,7 @@ export default function AdminPengumumanPage() {
     };
   }, []);
 
-  // Filter Data
+  // Filter Data (Global Search & Tag)
   const filteredData = data.filter((item) => {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -96,6 +99,12 @@ export default function AdminPengumumanPage() {
     const matchTag = selectedTag === "Semua" || item.tag === selectedTag;
     return matchSearch && matchTag;
   });
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -289,15 +298,26 @@ export default function AdminPengumumanPage() {
         </Button>
       </div>
 
-      {/* Table Controls (Search & Filter) Standar */}
+      {/* Table Controls (Search, Filter & Baris Per Halaman) Standar */}
       <TableControls
         searchTerm={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Cari pengumuman..."
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       >
         <TableFilterSelect
           value={selectedTag}
-          onChange={(e) => setSelectedTag(e.target.value)}
+          onChange={(e) => {
+            setSelectedTag(e.target.value);
+            setCurrentPage(1);
+          }}
         >
           <option value="Semua">Semua</option>
           {categories.map((c) => (
@@ -339,9 +359,11 @@ export default function AdminPengumumanPage() {
                 </TableCell>
               </TableRow>
             ) : (
-            filteredData.map((item, idx) => (
+            paginatedData.map((item, idx) => (
               <TableRow key={item.id}>
-                <TableCell className="text-center whitespace-nowrap">{idx + 1}</TableCell>
+                <TableCell className="text-center whitespace-nowrap">
+                  {(currentPage - 1) * pageSize + idx + 1}
+                </TableCell>
                 <TableCell className="max-w-xs truncate" title={item.title}>
                   {item.title}
                 </TableCell>
@@ -381,6 +403,14 @@ export default function AdminPengumumanPage() {
           )}
         </TableBody>
       </Table>
+      )}
+
+      {!isLoading && filteredData.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {/* Modal Form Tambah / Edit */}

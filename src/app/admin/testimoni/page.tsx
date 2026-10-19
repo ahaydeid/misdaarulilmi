@@ -19,6 +19,7 @@ import {
   TableRow,
   TableHeaderCell,
   TableCell,
+  TablePagination,
 } from "@/components/ui/Table";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
@@ -31,6 +32,8 @@ export default function AdminTestimoniPage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,7 +71,7 @@ export default function AdminTestimoniPage() {
     fetchData();
   }, [fetchData]);
 
-  // Filter Data
+  // Filter Data (Global Search)
   const filteredData = data.filter((item) => {
     const matchSearch =
       item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -76,6 +79,12 @@ export default function AdminTestimoniPage() {
       item.quote.toLowerCase().includes(search.toLowerCase());
     return matchSearch;
   });
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -278,11 +287,19 @@ export default function AdminTestimoniPage() {
         </Button>
       </div>
 
-      {/* Table Controls (Pencarian) Standar */}
+      {/* Table Controls (Pencarian & Baris Per Halaman) Standar */}
       <TableControls
         searchTerm={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Cari testimoni..."
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       />
 
       {/* Tabel Data Testimoni */}
@@ -323,10 +340,10 @@ export default function AdminTestimoniPage() {
                 </TableCell>
               </TableRow>
             ) : (
-            filteredData.map((item, idx) => (
+            paginatedData.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
-                  {idx + 1}
+                  {(currentPage - 1) * pageSize + idx + 1}
                 </TableCell>
                 <TableCell className="max-w-xs truncate" title={item.name}>
                   <div className="flex items-center gap-2.5">
@@ -368,6 +385,14 @@ export default function AdminTestimoniPage() {
           )}
         </TableBody>
       </Table>
+      )}
+
+      {!loading && filteredData.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {/* Modal Form Tambah / Ubah Testimoni */}

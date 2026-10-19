@@ -26,6 +26,7 @@ import {
   TableRow,
   TableHeaderCell,
   TableCell,
+  TablePagination,
 } from "@/components/ui/Table";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
@@ -75,6 +76,8 @@ export default function AdminGaleriPage() {
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState("Semua");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,7 +129,7 @@ export default function AdminGaleriPage() {
   );
   const categories = Array.from(new Set([...defaultCategories, ...dynamicCategories]));
 
-  // Filter Data
+  // Filter Data (Global Search, Type & Category)
   const filteredData = data.filter((item) => {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -140,6 +143,12 @@ export default function AdminGaleriPage() {
 
     return matchSearch && matchType && matchCategory;
   });
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -424,15 +433,26 @@ export default function AdminGaleriPage() {
         </Button>
       </div>
 
-      {/* Table Controls (Search & Filter) */}
+      {/* Table Controls (Search, Filter & Baris Per Halaman) */}
       <TableControls
         searchTerm={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Cari galeri kegiatan..."
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
       >
         <TableFilterSelect
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
+          onChange={(e) => {
+            setSelectedType(e.target.value);
+            setCurrentPage(1);
+          }}
         >
           <option value="Semua">Semua</option>
           <option value="Foto">Foto</option>
@@ -441,7 +461,10 @@ export default function AdminGaleriPage() {
 
         <TableFilterSelect
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
         >
           <option value="Semua">Semua</option>
           {categories.map((cat) => (
@@ -486,11 +509,11 @@ export default function AdminGaleriPage() {
             {filteredData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="py-8 text-center text-zinc-400">
-                  Tidak ada data galeri kegiatan yang ditemukan.
+                  Tidak ada galeri kegiatan yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
             ) : (
-            filteredData.map((item, index) => {
+            paginatedData.map((item, index) => {
               const isVideo = item.type === "video";
               const coverThumb =
                 item.src || (item.images && item.images[0]) || "/img/pramuka.jpeg";
@@ -498,7 +521,7 @@ export default function AdminGaleriPage() {
               return (
                 <TableRow key={item.id}>
                   <TableCell className="text-center whitespace-nowrap">
-                    {index + 1}
+                    {(currentPage - 1) * pageSize + index + 1}
                   </TableCell>
                   <TableCell className="max-w-xs truncate" title={item.title}>
                     {item.title}
@@ -578,6 +601,14 @@ export default function AdminGaleriPage() {
           )}
         </TableBody>
       </Table>
+      )}
+
+      {!isLoading && filteredData.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {/* Modal Form Tambah / Edit */}

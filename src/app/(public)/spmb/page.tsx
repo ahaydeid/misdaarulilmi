@@ -28,7 +28,7 @@ export default function SPMBPage() {
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl text-center">
         <span className="inline-block text-xs font-medium text-emerald-700 dark:text-emerald-300">
-          Tahun Ajaran 2026/2027
+          Tahun Ajaran 2027/2028
         </span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
           Sistem Penerimaan Murid Baru (SPMB)
