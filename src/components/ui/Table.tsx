@@ -53,7 +53,7 @@ export function TableControls({
               aria-label="Jumlah baris per halaman"
               value={pageSize ?? 10}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="appearance-none rounded-full border border-zinc-200 bg-white py-1.5 pl-3 pr-7 text-xs font-medium text-zinc-700 outline-none transition hover:border-zinc-300 focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-700 dark:focus:border-emerald-500 cursor-pointer"
+              className="appearance-none text-xs font-medium text-zinc-700 outline-none transition hover:border-zinc-300 focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-700 dark:focus:border-emerald-500 cursor-pointer"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
