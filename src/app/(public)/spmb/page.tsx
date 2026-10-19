@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { FaCircleCheck, FaWhatsapp } from "react-icons/fa6";
 
 export const metadata: Metadata = {
-  title: "PPDB Online",
+  title: "SPMB Online",
   description:
-    "Penerimaan Peserta Didik Baru (PPDB) MIS Daarul Ilmi Balaraja. Syarat pendaftaran, alur, dan formulir pendaftaran santri baru.",
+    "Sistem Penerimaan Murid Baru (SPMB) MIS Daarul Ilmi Balaraja. Syarat pendaftaran, alur, dan formulir pendaftaran santri baru.",
 };
 
 const requirements = [
@@ -18,12 +18,12 @@ const requirements = [
 
 const steps = [
   { step: "1", title: "Pendaftaran Online / Offline", desc: "Mengisi data santri dan orang tua secara lengkap." },
-  { step: "2", title: "Penyerahan Berkas", desc: "Menyerahkan dokumen persyaratan ke panitia PPDB madrasah." },
+  { step: "2", title: "Penyerahan Berkas", desc: "Menyerahkan dokumen persyaratan ke panitia SPMB madrasah." },
   { step: "3", title: "Observasi Santri", desc: "Tes pemetaan kemampuan membaca, menulis, dan dasar membaca Iqro/Al-Qur'an." },
   { step: "4", title: "Pengumuman & Daftar Ulang", desc: "Konfirmasi penerimaan santri dan penyelesaian administrasi." },
 ];
 
-export default function PPDBPage() {
+export default function SPMBPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl text-center">
@@ -31,7 +31,7 @@ export default function PPDBPage() {
           Tahun Ajaran 2026/2027
         </span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-          Penerimaan Peserta Didik Baru (PPDB)
+          Sistem Penerimaan Murid Baru (SPMB)
         </h1>
         <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
           Bergabunglah bersama keluarga besar MIS Daarul Ilmi Balaraja. Tempat tumbuh kembangnya generasi berilmu dan berakhlakul karimah.
@@ -79,13 +79,13 @@ export default function PPDBPage() {
         </div>
       </div>
 
-      {/* Hubungi Panitia PPDB */}
+      {/* Hubungi Panitia SPMB */}
       <div className="mt-12 rounded-2xl bg-emerald-50 p-8 text-center dark:bg-emerald-950/30">
         <h2 className="text-xl font-bold text-emerald-950 dark:text-emerald-200">
           Butuh Bantuan Pendaftaran?
         </h2>
         <p className="mt-2 text-sm text-emerald-800 dark:text-emerald-300">
-          Hubungi panitia PPDB MIS Daarul Ilmi melalui WhatsApp untuk informasi kuota, jadwal observasi, dan formulir pendaftaran:
+          Hubungi panitia SPMB MIS Daarul Ilmi melalui WhatsApp untuk informasi kuota, jadwal observasi, dan formulir pendaftaran:
         </p>
 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-4xl mx-auto">

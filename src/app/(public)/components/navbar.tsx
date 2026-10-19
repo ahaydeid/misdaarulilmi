@@ -218,10 +218,10 @@ export default function Navbar() {
         {/* Actions & Theme Toggle (Desktop) */}
         <div className="hidden items-center gap-3 md:flex">
           <Link
-            href="/ppdb"
+            href="/spmb"
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-emerald-700 active:scale-95"
           >
-            PPDB Online
+            SPMB Online
           </Link>
           <ThemeToggle />
         </div>
@@ -323,11 +323,11 @@ export default function Navbar() {
 
             <div className="pt-3">
               <Link
-                href="/ppdb"
+                href="/spmb"
                 onClick={() => setIsOpen(false)}
                 className="flex w-full items-center justify-center rounded-lg bg-emerald-600 py-2.5 text-center text-sm font-medium text-white shadow-xs transition hover:bg-emerald-700"
               >
-                PPDB Online
+                SPMB Online
               </Link>
             </div>
           </nav>

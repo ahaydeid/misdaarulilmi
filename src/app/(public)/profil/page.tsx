@@ -89,7 +89,7 @@ const featuredPrograms = [
     icon: FaHandsPraying,
   },
   {
-    title: "Shalat Berjamaah Dzuhur",
+    title: "Sholat Dzuhur Berjamaah",
     icon: FaMosque,
   },
   {
@@ -122,6 +122,7 @@ const extracurriculars = [
   { name: "Pramuka", icon: FaCampground },
   { name: "KSM", icon: FaFlask },
   { name: "Pencak Silat", icon: FaHandFist },
+  { name: "Karate", icon: FaHandFist },
   { name: "Angklung", icon: FaMusic },
   { name: "Melukis", icon: FaPalette },
   { name: "Seni Tari", icon: FaUsers },

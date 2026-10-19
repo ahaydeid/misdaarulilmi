@@ -21,7 +21,7 @@ Dokumen ini memuat kesepakatan teknis, arsitektur, dan prinsip kerja untuk penge
 ## 2. Arsitektur Proyek & Pola Struktur Komponen
 
 * **Pemisahan 2 Sisi**:
-  * **Sisi Publik**: `src/app/(public)/` (rute root `/`, `/tentang`, `/visi-misi`, `/galeri`, `/berita`, `/kontak`, `/ppdb`).
+  * **Sisi Publik**: `src/app/(public)/` (rute root `/`, `/tentang`, `/visi-misi`, `/galeri`, `/berita`, `/kontak`, `/spmb`).
   * **Sisi Admin**: `src/app/admin/` (panel administrasi, terlindungi otentikasi Supabase).
 * **Colocation Komponen**:
   * Komponen sisi publik ditaruh di dalam: `src/app/(public)/components/`.

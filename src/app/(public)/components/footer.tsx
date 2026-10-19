@@ -128,8 +128,8 @@ export default function Footer() {
             </h4>
             <ul className="mt-4 space-y-2.5 text-sm">
               <li>
-                <Link href="/ppdb" className="transition hover:text-emerald-600 dark:hover:text-emerald-400">
-                  Pendaftaran Online (PPDB)
+                <Link href="/spmb" className="transition hover:text-emerald-600 dark:hover:text-emerald-400">
+                  Pendaftaran Online (SPMB)
                 </Link>
               </li>
               <li>
@@ -160,7 +160,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <FaWhatsapp className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-500" />
-                <span>+62 856-9460-5981 (Ibu Silvi)</span>
+                <span>+62 813-1150-7042 (Ibu Rum)</span>
               </li>
             </ul>
           </div>

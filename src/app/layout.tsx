@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     "Sekolah Islam",
     "Madrasah",
     "Pendidikan Islam",
-    "PPDB Madrasah",
+    "SPMB Madrasah",
   ],
   authors: [{ name: "MIS Daarul Ilmi" }],
   creator: "edula",
