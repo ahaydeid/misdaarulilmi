@@ -4,23 +4,23 @@ import { FaCircleCheck, FaWhatsapp } from "react-icons/fa6";
 export const metadata: Metadata = {
   title: "SPMB Online",
   description:
-    "Sistem Penerimaan Murid Baru (SPMB) MIS Daarul Ilmi Balaraja. Syarat pendaftaran, alur, dan formulir pendaftaran santri baru.",
+    "Sistem Penerimaan Murid Baru (SPMB) MIS Daarul Ilmi Balaraja. Syarat pendaftaran, alur, dan formulir pendaftaran murid baru.",
 };
 
 const requirements = [
   "Mengisi formulir pendaftaran secara online atau langsung di sekretariat madrasah.",
-  "Fotokopi Akta Kelahiran santri (3 lembar).",
+  "Fotokopi Akta Kelahiran murid (3 lembar).",
   "Fotokopi Kartu Keluarga (KK) orang tua / wali (3 lembar).",
   "Fotokopi KTP kedua orang tua (masing-masing 3 lembar).",
-  "Pas foto santri ukuran 3x4 (4 lembar, latar merah/biru).",
+  "Pas foto murid ukuran 3x4 (4 lembar, latar merah/biru).",
   "Ijazah / Surat Keterangan Lulus dari RA/TK/PAUD (bisa menyusul).",
 ];
 
 const steps = [
-  { step: "1", title: "Pendaftaran Online / Offline", desc: "Mengisi data santri dan orang tua secara lengkap." },
+  { step: "1", title: "Pendaftaran Online / Offline", desc: "Mengisi data calon murid dan orang tua secara lengkap." },
   { step: "2", title: "Penyerahan Berkas", desc: "Menyerahkan dokumen persyaratan ke panitia SPMB madrasah." },
-  { step: "3", title: "Observasi Santri", desc: "Tes pemetaan kemampuan membaca, menulis, dan dasar membaca Iqro/Al-Qur'an." },
-  { step: "4", title: "Pengumuman & Daftar Ulang", desc: "Konfirmasi penerimaan santri dan penyelesaian administrasi." },
+  { step: "3", title: "Observasi Murid", desc: "Tes pemetaan kemampuan membaca, menulis, dan dasar membaca Iqro/Al-Qur'an." },
+  { step: "4", title: "Pengumuman & Daftar Ulang", desc: "Konfirmasi penerimaan murid dan penyelesaian administrasi." },
 ];
 
 export default function SPMBPage() {
@@ -57,7 +57,7 @@ export default function SPMBPage() {
         {/* Alur Pendaftaran */}
         <div className="rounded-2xl bg-zinc-50 p-8 dark:bg-zinc-900">
           <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-            Alur Penerimaan Santri
+            Alur Penerimaan Murid
           </h2>
           <div className="mt-6 space-y-5">
             {steps.map((st) => (

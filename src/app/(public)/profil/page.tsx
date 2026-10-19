@@ -167,7 +167,7 @@ export default async function ProfilPage() {
           Profil MIS Daarul Ilmi Balaraja
         </h1>
         <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Lembaga pendidikan dasar Islam yang berkomitmen melahirkan generasi santri yang beriman, berakhlak mulia, cerdas, dan siap menghadapi tantangan zaman.
+          Lembaga pendidikan dasar Islam yang berkomitmen melahirkan generasi murid yang beriman, berakhlak mulia, cerdas, dan siap menghadapi tantangan zaman.
         </p>
       </div>
 

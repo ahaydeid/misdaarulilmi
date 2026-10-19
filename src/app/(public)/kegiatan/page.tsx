@@ -5,7 +5,7 @@ import { FaCalendarDays, FaTag } from "react-icons/fa6";
 export const metadata: Metadata = {
   title: "Agenda & Kegiatan",
   description:
-    "Informasi seputar agenda, ekstrakurikuler, dan kegiatan santri di MIS Daarul Ilmi Balaraja.",
+    "Informasi seputar agenda, ekstrakurikuler, dan kegiatan murid di MIS Daarul Ilmi Balaraja.",
 };
 
 const activities = [
@@ -14,7 +14,7 @@ const activities = [
     category: "Ekstrakurikuler",
     date: "Setiap Jumat Sore",
     description:
-      "Pelatihan ketangkasan, keterampilan simpul, pertolongan pertama, dan kedisiplinan santri madrasah.",
+      "Pelatihan ketangkasan, keterampilan simpul, pertolongan pertama, dan kedisiplinan murid madrasah.",
   },
   {
     title: "Tahfidz & Pembiasaan Shalat Dhuha",
@@ -24,7 +24,7 @@ const activities = [
       "Muroja'ah dan setoran hafalan Al-Qur'an juz 30 dipandu oleh ustadz dan ustadzah pengampu.",
   },
   {
-    title: "Kajian Parenting & Pertemuan Wali Santri",
+    title: "Kajian Parenting & Pertemuan Wali Murid",
     category: "Madrasah & Orang Tua",
     date: "Satu Kali Setiap Semester",
     description:
@@ -37,10 +37,10 @@ export default function KegiatanPage() {
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">
-          Kegiatan & Program Santri
+          Kegiatan & Program Murid
         </h1>
         <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Berbagai aktivitas kurikuler dan ekstrakurikuler untuk membentuk karakter dan mengasah potensi santri.
+          Berbagai aktivitas kurikuler dan ekstrakurikuler untuk membentuk karakter dan mengasah potensi murid.
         </p>
       </div>
 

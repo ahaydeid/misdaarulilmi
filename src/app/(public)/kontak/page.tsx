@@ -15,7 +15,7 @@ export default function KontakPage() {
           Hubungi Kami
         </h1>
         <p className="mt-4 text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-          Kami siap melayani pertanyaan seputar pendaftaran santri baru, kegiatan madrasah, dan informasi akademik.
+          Kami siap melayani pertanyaan seputar pendaftaran murid baru, kegiatan madrasah, dan informasi akademik.
         </p>
       </div>
 

@@ -8,7 +8,7 @@ import {
 const schoolStrengths = [
   {
     title: "Membentuk Karakter Religius dan Disiplin",
-    desc: "Penanaman nilai-nilai akhlakul karimah, pembiasaan ibadah harian, dan kedisiplinan santri sejak dini.",
+    desc: "Penanaman nilai-nilai akhlakul karimah, pembiasaan ibadah harian, dan kedisiplinan murid sejak dini.",
     icon: FaMosque,
     iconColor: "text-emerald-600 dark:text-emerald-400",
   },
@@ -26,7 +26,7 @@ const schoolStrengths = [
   },
   {
     title: "Siap Mencetak Lulusan Unggulan",
-    desc: "Membekali santri dengan pondasi IMTAQ dan IPTEK yang kuat agar siap berprestasi di jenjang berikutnya.",
+    desc: "Membekali murid dengan pondasi IMTAQ dan IPTEK yang kuat agar siap berprestasi di jenjang berikutnya.",
     icon: FaGraduationCap,
     iconColor: "text-sky-600 dark:text-sky-400",
   },

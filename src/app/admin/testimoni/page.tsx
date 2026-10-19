@@ -419,7 +419,7 @@ export default function AdminTestimoniPage() {
               required
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="Contoh: Wali Santri Kelas II atau Alumni"
+              placeholder="Contoh: Wali Murid Kelas II atau Alumni"
               className="mt-1.5 w-full rounded border border-zinc-200 px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-emerald-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
             />
           </div>

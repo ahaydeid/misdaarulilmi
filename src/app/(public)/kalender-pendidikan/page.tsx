@@ -8,7 +8,7 @@ export const instant = false;
 export const metadata: Metadata = {
   title: "Kalender Pendidikan | MIS Daarul Ilmi Balaraja",
   description:
-    "Jadwal agenda akademik, kegiatan santri, dan hari libur MIS Daarul Ilmi Balaraja.",
+    "Jadwal agenda akademik, kegiatan murid, dan hari libur MIS Daarul Ilmi Balaraja.",
 };
 
 export default async function KalenderPendidikanPage() {

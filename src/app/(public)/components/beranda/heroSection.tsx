@@ -119,11 +119,11 @@ export default function HeroSection() {
               />
             </svg>
 
-            {/* Foto Maskot Santri (Pemeran Utama dengan Gradasi Melengkung Nyata ke Bawah) */}
+            {/* Foto Maskot Murid (Pemeran Utama dengan Gradasi Melengkung Nyata ke Bawah) */}
             <div className="relative aspect-square w-full max-w-[400px] sm:max-w-[480px] lg:max-w-[520px] [mask-image:radial-gradient(ellipse_75%_68%_at_50%_25%,black_50%,transparent_90%)] [-webkit-mask-image:radial-gradient(ellipse_75%_68%_at_50%_25%,black_50%,transparent_90%)]">
               <Image
                 src="/img/murid-hero.png"
-                alt="Santri MIS Daarul Ilmi Balaraja"
+                alt="Murid MIS Daarul Ilmi Balaraja"
                 fill
                 sizes="(max-width: 1024px) 100vw, 45vw"
                 className="object-contain object-bottom"

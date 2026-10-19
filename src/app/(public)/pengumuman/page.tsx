@@ -9,7 +9,7 @@ export const instant = false;
 export const metadata: Metadata = {
   title: "Pengumuman & Berita",
   description:
-    "Pemberitahuan resmi, edaran wali santri, dan berita terkini dari MIS Daarul Ilmi Balaraja.",
+    "Pemberitahuan resmi, edaran wali murid, dan berita terkini dari MIS Daarul Ilmi Balaraja.",
 };
 
 export default async function PengumumanPage() {
