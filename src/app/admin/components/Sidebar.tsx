@@ -15,6 +15,8 @@ import {
   HiOutlineArrowLeftOnRectangle,
   HiOutlineGlobeAlt,
 } from "react-icons/hi2";
+import Swal from "sweetalert2";
+import { supabase } from "@/lib/supabase/client";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -56,10 +58,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
+  const [userEmail, setUserEmail] = useState("admin@daarulilmi.sch.id");
+
   const profile = {
     name: "Admin Madrasah",
-    email: "admin@daarulilmi.sch.id",
+    email: userEmail,
   };
+
+  // Ambil email admin aktif dari sesi Supabase
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) {
+        setUserEmail(data.user.email);
+      }
+    });
+  }, []);
 
   // Tutup dropdown profil jika klik di luar
   useEffect(() => {
@@ -75,9 +88,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed })
     };
   }, []);
 
-  const handleLogout = () => {
-    if (confirm("Apakah Anda yakin ingin keluar?")) {
-      router.push("/");
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Konfirmasi Keluar",
+      text: "Apakah Anda yakin ingin keluar dari portal admin?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#059669",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, Keluar",
+      cancelButtonText: "Batal",
+    });
+
+    if (result.isConfirmed) {
+      await supabase.auth.signOut();
+      router.push("/login");
+      router.refresh();
     }
   };
 

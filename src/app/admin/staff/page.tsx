@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import {
   HiOutlinePlus,
@@ -20,25 +20,52 @@ import {
   TableHeaderCell,
   TableCell,
 } from "@/components/ui/Table";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
-import {
-  staffMembersData,
-  type StaffMember,
-} from "@/app/(public)/profil/staffData";
+import { supabase } from "@/lib/supabase/client";
+import { uploadMediaFile } from "@/lib/services/storage";
+import type { StaffMemberRecord } from "@/lib/services/staff";
 
 export default function AdminStaffPage() {
-  const [data, setData] = useState<StaffMember[]>(staffMembersData);
+  const [data, setData] = useState<StaffMemberRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<StaffMember | null>(null);
+  const [editingItem, setEditingItem] = useState<StaffMemberRecord | null>(null);
 
   // Form State
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
-  const [photo, setPhoto] = useState("");
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isActive, setIsActive] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const { data: records, error } = await supabase
+      .from("staff_members")
+      .select("*")
+      .order("order_index", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      Swal.fire({
+        title: "Gagal Mengambil Data",
+        text: error.message,
+        icon: "error",
+      });
+    } else {
+      setData((records as StaffMemberRecord[]) || []);
+    }
+    setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Filter Data
   const filteredData = data.filter((item) => {
@@ -52,17 +79,19 @@ export default function AdminStaffPage() {
     setEditingItem(null);
     setName("");
     setSubject("");
-    setPhoto("");
+    setPhotoPreview("");
+    setPhotoFile(null);
     setIsActive(true);
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (item: StaffMember) => {
+  const handleOpenEdit = (item: StaffMemberRecord) => {
     setEditingItem(item);
     setName(item.name);
     setSubject(item.subject);
-    setPhoto(item.photo || "");
-    setIsActive(item.isActive);
+    setPhotoPreview(item.photo_url || "");
+    setPhotoFile(null);
+    setIsActive(item.is_active);
     setIsModalOpen(true);
   };
 
@@ -75,16 +104,17 @@ export default function AdminStaffPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPhoto(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setPhotoFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPhotoPreview(objectUrl);
   };
 
-  const handleDelete = (item: StaffMember) => {
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview("");
+  };
+
+  const handleDelete = (item: StaffMemberRecord) => {
     Swal.fire({
       title: "Hapus Staff?",
       text: `Apakah Anda yakin ingin menghapus data "${item.name}"?`,
@@ -94,21 +124,30 @@ export default function AdminStaffPage() {
       cancelButtonColor: "#64748b",
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setData((prev) => prev.filter((a) => a.id !== item.id));
-        Swal.fire({
-          title: "Terhapus!",
-          text: "Data staff berhasil dihapus.",
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        const { error } = await supabase
+          .from("staff_members")
+          .delete()
+          .eq("id", item.id);
+
+        if (error) {
+          Swal.fire("Gagal Menghapus", error.message, "error");
+        } else {
+          Swal.fire({
+            title: "Terhapus!",
+            text: "Data staff berhasil dihapus.",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+          fetchData();
+        }
       }
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim() || !subject.trim()) {
@@ -116,49 +155,96 @@ export default function AdminStaffPage() {
       return;
     }
 
-    if (editingItem) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                name: name.trim(),
-                subject: subject.trim(),
-                photo: photo.trim() || null,
-                isActive,
-              }
-            : item
-        )
-      );
+    const confirmResult = await Swal.fire({
+      title: editingItem ? "Simpan Perubahan?" : "Tambah Staff?",
+      text: editingItem
+        ? `Perbarui data staff "${name.trim()}"?`
+        : `Tambahkan "${name.trim()}" ke daftar staff?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#059669",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, Simpan",
+      cancelButtonText: "Batal",
+    });
 
-      Swal.fire({
-        title: "Berhasil!",
-        text: "Data staff berhasil diperbarui.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } else {
-      const newItem: StaffMember = {
-        id: `staff-${Date.now()}`,
-        name: name.trim(),
-        subject: subject.trim(),
-        photo: photo.trim() || null,
-        isActive,
-      };
+    if (!confirmResult.isConfirmed) return;
 
-      setData((prev) => [newItem, ...prev]);
+    setIsSubmitting(true);
 
-      Swal.fire({
-        title: "Tersimpan!",
-        text: "Staff baru berhasil ditambahkan.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+    try {
+      let finalPhotoUrl: string | null = photoPreview.startsWith("blob:")
+        ? null
+        : photoPreview || null;
+
+      // Jika ada berkas baru, kompresi dan upload ke Supabase Storage
+      if (photoFile) {
+        try {
+          const publicUrl = await uploadMediaFile(photoFile, "staff", "media");
+          finalPhotoUrl = publicUrl;
+        } catch (uploadErr: unknown) {
+          setIsSubmitting(false);
+          const msg =
+            uploadErr instanceof Error
+              ? uploadErr.message
+              : "Gagal mengunggah foto profil.";
+          Swal.fire("Gagal Upload Foto", msg, "error");
+          return;
+        }
+      }
+
+      if (editingItem) {
+        const { error } = await supabase
+          .from("staff_members")
+          .update({
+            name: name.trim(),
+            subject: subject.trim(),
+            photo_url: finalPhotoUrl,
+            is_active: isActive,
+          })
+          .eq("id", editingItem.id);
+
+        if (error) {
+          Swal.fire("Gagal Memperbarui", error.message, "error");
+        } else {
+          Swal.fire({
+            title: "Berhasil!",
+            text: "Data staff berhasil diperbarui.",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+          setIsModalOpen(false);
+          fetchData();
+        }
+      } else {
+        const { error } = await supabase.from("staff_members").insert({
+          name: name.trim(),
+          subject: subject.trim(),
+          photo_url: finalPhotoUrl,
+          is_active: isActive,
+        });
+
+        if (error) {
+          Swal.fire("Gagal Menyimpan", error.message, "error");
+        } else {
+          Swal.fire({
+            title: "Tersimpan!",
+            text: "Staff baru berhasil ditambahkan.",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+          setIsModalOpen(false);
+          fetchData();
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan tidak terduga";
+      Swal.fire("Terjadi Kesalahan", msg, "error");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsModalOpen(false);
   };
 
   return (
@@ -186,51 +272,57 @@ export default function AdminStaffPage() {
       />
 
       {/* Tabel Data Staff */}
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeaderCell className="w-12 text-center whitespace-nowrap">
-              No
-            </TableHeaderCell>
-            <TableHeaderCell className="whitespace-nowrap">
-              Nama Lengkap
-            </TableHeaderCell>
-            <TableHeaderCell className="whitespace-nowrap">
-              Jabatan / Tugas
-            </TableHeaderCell>
-            <TableHeaderCell className="w-28 text-center whitespace-nowrap">
-              Status
-            </TableHeaderCell>
-            <TableHeaderCell
-              stickyRight
-              className="w-24 text-center whitespace-nowrap"
-            >
-              Aksi
-            </TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredData.length === 0 ? (
+      {loading ? (
+        <TableSkeleton rows={6} cols={5} hasAvatar />
+      ) : (
+        <Table>
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={5} className="py-8 text-center text-zinc-400">
-                Tidak ada data staff yang sesuai dengan pencarian.
-              </TableCell>
+              <TableHeaderCell className="w-12 text-center whitespace-nowrap">
+                No
+              </TableHeaderCell>
+              <TableHeaderCell className="whitespace-nowrap">
+                Nama Lengkap
+              </TableHeaderCell>
+              <TableHeaderCell className="whitespace-nowrap">
+                Jabatan / Tugas
+              </TableHeaderCell>
+              <TableHeaderCell className="w-28 text-center whitespace-nowrap">
+                Status
+              </TableHeaderCell>
+              <TableHeaderCell
+                stickyRight
+                className="w-24 text-center whitespace-nowrap"
+              >
+                Aksi
+              </TableHeaderCell>
             </TableRow>
-          ) : (
+          </TableHead>
+          <TableBody>
+            {filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-zinc-400">
+                  Tidak ada data staff yang sesuai dengan pencarian.
+                </TableCell>
+              </TableRow>
+            ) : (
             filteredData.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
                   {idx + 1}
                 </TableCell>
                 <TableCell className="max-w-xs truncate" title={item.name}>
-                  {item.name}
+                  <div className="flex items-center gap-2.5">
+                    <Avatar name={item.name} photo={item.photo_url} size="smedium" />
+                    <span className="truncate">{item.name}</span>
+                  </div>
                 </TableCell>
                 <TableCell className="max-w-xs truncate" title={item.subject}>
                   {item.subject}
                 </TableCell>
                 <TableCell className="text-center whitespace-nowrap">
-                  <Badge variant={item.isActive ? "success" : "secondary"}>
-                    {item.isActive ? "Aktif" : "Tidak Aktif"}
+                  <Badge variant={item.is_active ? "success" : "secondary"}>
+                    {item.is_active ? "Aktif" : "Tidak Aktif"}
                   </Badge>
                 </TableCell>
                 <TableCell stickyRight className="text-center whitespace-nowrap">
@@ -256,11 +348,12 @@ export default function AdminStaffPage() {
           )}
         </TableBody>
       </Table>
+      )}
 
       {/* Modal Form Tambah / Ubah Staff */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => !isSubmitting && setIsModalOpen(false)}
         title={editingItem ? "Edit Staff" : "Tambah Staff"}
         size="lg"
       >
@@ -314,10 +407,10 @@ export default function AdminStaffPage() {
           {/* Foto Profil (File Picker) */}
           <div>
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
-              Foto Profil (Opsional)
+              Foto Profil <span className="text-gray-400 font-normal">(Opsional)</span>
             </label>
             <div className="flex items-center gap-4 rounded border border-zinc-200 p-3 dark:border-zinc-700 dark:bg-zinc-900">
-              <Avatar name={name || "Staff"} photo={photo} size="medium" />
+              <Avatar name={name || "Staff"} photo={photoPreview} size="medium" />
               <div className="flex-1 space-y-1.5">
                 <input
                   type="file"
@@ -326,11 +419,11 @@ export default function AdminStaffPage() {
                   className="block w-full text-xs text-zinc-500 file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-zinc-800 dark:file:text-zinc-200 dark:hover:file:bg-zinc-700"
                 />
                 <div className="flex items-center justify-between text-[11px] text-zinc-400">
-                  <span>Mendukung file JPG, PNG, atau WebP</span>
-                  {photo && (
+                  <span>Otomatis dikompresi ke WebP sebelum diunggah</span>
+                  {photoPreview && (
                     <button
                       type="button"
-                      onClick={() => setPhoto("")}
+                      onClick={handleRemovePhoto}
                       className="text-rose-500 hover:text-rose-600 transition cursor-pointer"
                     >
                       Hapus Foto
@@ -347,12 +440,22 @@ export default function AdminStaffPage() {
               type="button"
               variant="outline"
               size="md"
+              disabled={isSubmitting}
               onClick={() => setIsModalOpen(false)}
             >
               Batal
             </Button>
-            <Button type="submit" variant="primary" size="md">
-              {editingItem ? "Simpan Perubahan" : "Tambah Staff"}
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Menyimpan..."
+                : editingItem
+                ? "Simpan Perubahan"
+                : "Tambah Staff"}
             </Button>
           </div>
         </form>

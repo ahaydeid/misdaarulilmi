@@ -27,6 +27,10 @@ import {
   FaGraduationCap,
 } from "react-icons/fa6";
 import Avatar from "@/components/ui/Avatar";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { StaffMemberRecord } from "@/lib/services/staff";
+
+export const instant = false;
 
 export const metadata: Metadata = {
   title: "Profil Madrasah",
@@ -143,9 +147,17 @@ const schoolIdentity = [
   { label: "Waktu Belajar", value: "Pagi Hari (Senin – Sabtu)" },
 ];
 
-import { staffMembersData as staffMembers } from "./staffData";
+export default async function ProfilPage() {
+  const supabase = await createServerSupabaseClient();
+  const { data: staffMembers } = await supabase
+    .from("staff_members")
+    .select("*")
+    .eq("is_active", true)
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
 
-export default function ProfilPage() {
+  const activeStaff = (staffMembers as StaffMemberRecord[]) || [];
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       {/* Header Halaman */}
@@ -315,26 +327,32 @@ export default function ProfilPage() {
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 sm:w-24 bg-gradient-to-l from-gray-50/90 via-gray-50/40 to-transparent dark:from-zinc-950/90 dark:via-zinc-950/40 dark:to-transparent" />
 
           {/* 1 Baris Sliding Items */}
-          <div className="staff-marquee-track flex gap-8 pr-8">
-            {[...staffMembers, ...staffMembers].map((staff, idx) => (
-              <div
-                key={idx}
-                className="w-48 sm:w-56 shrink-0 flex flex-col items-center text-center"
-              >
-                <Avatar
-                  name={staff.name}
-                  photo={staff.photo}
-                  className="!w-20 !h-20 sm:!w-24 sm:!h-24 shadow-xs"
-                />
-                <h3 className="mt-3 text-sm font-semibold text-zinc-900 sm:text-base dark:text-white">
-                  {staff.name}
-                </h3>
-                <p className="mt-1 text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">
-                  {staff.subject}
-                </p>
-              </div>
-            ))}
-          </div>
+          {activeStaff.length > 0 ? (
+            <div className="staff-marquee-track flex gap-8 pr-8">
+              {[...activeStaff, ...activeStaff].map((staff, idx) => (
+                <div
+                  key={`${staff.id}-${idx}`}
+                  className="w-48 sm:w-56 shrink-0 flex flex-col items-center text-center"
+                >
+                  <Avatar
+                    name={staff.name}
+                    photo={staff.photo_url}
+                    className="!w-20 !h-20 sm:!w-24 sm:!h-24 shadow-xs"
+                  />
+                  <h3 className="mt-3 text-sm font-semibold text-zinc-900 sm:text-base dark:text-white">
+                    {staff.name}
+                  </h3>
+                  <p className="mt-1 text-xs text-zinc-500 sm:text-sm dark:text-zinc-400">
+                    {staff.subject}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-zinc-400">
+              Belum ada data staf terdaftar.
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import {
   HiOutlinePlus,
   HiOutlinePencilSquare,
   HiOutlineTrash,
 } from "react-icons/hi2";
-import { announcements, type Announcement } from "@/app/(public)/pengumuman/data";
+import { supabase } from "@/lib/supabase/client";
+import type { AnnouncementRecord } from "@/lib/services/announcements";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -21,6 +22,7 @@ import {
   TableHeaderCell,
   TableCell,
 } from "@/components/ui/Table";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
 import dynamic from "next/dynamic";
 
@@ -34,18 +36,6 @@ const RichTextEditor = dynamic(
   }
 );
 
-const contentToHtml = (ann: Announcement): string => {
-  if (ann.htmlContent) return ann.htmlContent;
-  let html = (ann.content?.paragraphs || []).map((p) => `<p>${p}</p>`).join("");
-  if (ann.content?.points && ann.content.points.length > 0) {
-    html += `<ul>${ann.content.points.map((pt) => `<li>${pt}</li>`).join("")}</ul>`;
-  }
-  if (ann.content?.closing) {
-    html += `<p>${ann.content.closing}</p>`;
-  }
-  return html;
-};
-
 const generateExcerpt = (html: string, maxLen = 140): string => {
   if (!html) return "";
   const text = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
@@ -54,13 +44,16 @@ const generateExcerpt = (html: string, maxLen = 140): string => {
 };
 
 export default function AdminPengumumanPage() {
-  const [data, setData] = useState<Announcement[]>(announcements);
+  const [data, setData] = useState<AnnouncementRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState("Semua");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<Announcement | null>(null);
+  const [editingItem, setEditingItem] = useState<AnnouncementRecord | null>(null);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -70,6 +63,30 @@ export default function AdminPengumumanPage() {
   const [contentHtml, setContentHtml] = useState("");
 
   const categories = ["Akademik", "Kesiswaan", "Umum"];
+
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      const { data: records, error } = await supabase
+        .from("announcements")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (ignore) return;
+      if (error) {
+        setLoadError(error.message);
+        Swal.fire("Error Database", "Gagal memuat pengumuman: " + error.message, "error");
+      } else {
+        setData(records || []);
+      }
+      setIsLoading(false);
+    };
+
+    void load();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Filter Data
   const filteredData = data.filter((item) => {
@@ -90,17 +107,17 @@ export default function AdminPengumumanPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (item: Announcement) => {
+  const handleOpenEdit = (item: AnnouncementRecord) => {
     setEditingItem(item);
     setTitle(item.title);
     setTag(item.tag);
     setAuthor(item.author || "");
-    setIsActive(item.isActive !== false);
-    setContentHtml(contentToHtml(item));
+    setIsActive(item.is_active);
+    setContentHtml(item.content_html || "");
     setIsModalOpen(true);
   };
 
-  const handleDelete = (item: Announcement) => {
+  const handleDelete = (item: AnnouncementRecord) => {
     Swal.fire({
       title: "Hapus Pengumuman?",
       text: `Apakah Anda yakin ingin menghapus "${item.title}"?`,
@@ -110,9 +127,19 @@ export default function AdminPengumumanPage() {
       cancelButtonColor: "#64748b",
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setData((prev) => prev.filter((a) => a.slug !== item.slug));
+        const { error } = await supabase
+          .from("announcements")
+          .delete()
+          .eq("id", item.id);
+
+        if (error) {
+          Swal.fire("Gagal", "Gagal menghapus: " + error.message, "error");
+          return;
+        }
+
+        setData((prev) => prev.filter((a) => a.id !== item.id));
         Swal.fire({
           title: "Terhapus!",
           text: "Pengumuman berhasil dihapus.",
@@ -124,7 +151,7 @@ export default function AdminPengumumanPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const plainText = contentHtml.replace(/<[^>]*>/g, "").trim();
@@ -135,23 +162,61 @@ export default function AdminPengumumanPage() {
 
     const autoExcerpt = generateExcerpt(contentHtml);
 
+    const confirmResult = await Swal.fire({
+      title: "Konfirmasi Simpan",
+      text: editingItem
+        ? "Apakah Anda yakin ingin memperbarui pengumuman ini?"
+        : "Apakah Anda yakin ingin menambahkan pengumuman baru ini?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#059669",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, Simpan",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     if (editingItem) {
-      // Edit mode: pertahankan tanggal asli pembuatan
+      const { error } = await supabase
+        .from("announcements")
+        .update({
+          title,
+          tag,
+          author,
+          excerpt: autoExcerpt,
+          content_html: contentHtml,
+          is_active: isActive,
+        })
+        .eq("id", editingItem.id);
+
+      setIsSubmitting(false);
+
+      if (error) {
+        Swal.fire("Gagal", "Gagal memperbarui: " + error.message, "error");
+        return;
+      }
+
       setData((prev) =>
         prev.map((item) =>
-          item.slug === editingItem.slug
+          item.id === editingItem.id
             ? {
                 ...item,
                 title,
                 tag,
                 author,
                 excerpt: autoExcerpt,
-                isActive,
-                htmlContent: contentHtml,
+                content_html: contentHtml,
+                is_active: isActive,
               }
             : item
         )
       );
+
       Swal.fire({
         title: "Berhasil!",
         text: "Pengumuman berhasil diperbarui.",
@@ -159,8 +224,8 @@ export default function AdminPengumumanPage() {
         timer: 1500,
         showConfirmButton: false,
       });
+      setIsModalOpen(false);
     } else {
-      // Add mode: tanggal diambil otomatis saat dibuat
       const slug =
         title
           .toLowerCase()
@@ -175,21 +240,31 @@ export default function AdminPengumumanPage() {
         year: "numeric",
       });
 
-      const newItem: Announcement = {
+      const newRecord = {
         slug,
         title,
         tag,
         date: currentDate,
         author,
         excerpt: autoExcerpt,
-        isActive,
-        htmlContent: contentHtml,
-        content: {
-          paragraphs: [autoExcerpt],
-        },
+        content_html: contentHtml,
+        is_active: isActive,
       };
 
-      setData([newItem, ...data]);
+      const { data: inserted, error } = await supabase
+        .from("announcements")
+        .insert([newRecord])
+        .select()
+        .single();
+
+      setIsSubmitting(false);
+
+      if (error) {
+        Swal.fire("Gagal", "Gagal menyimpan pengumuman: " + error.message, "error");
+        return;
+      }
+
+      setData((prev) => [inserted, ...prev]);
       Swal.fire({
         title: "Tersimpan!",
         text: "Pengumuman baru berhasil ditambahkan.",
@@ -197,9 +272,8 @@ export default function AdminPengumumanPage() {
         timer: 1500,
         showConfirmButton: false,
       });
+      setIsModalOpen(false);
     }
-
-    setIsModalOpen(false);
   };
 
   return (
@@ -235,36 +309,45 @@ export default function AdminPengumumanPage() {
       </TableControls>
 
       {/* Table Section Tanpa Pembungkus Ekstra */}
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeaderCell className="w-12 text-center whitespace-nowrap">No</TableHeaderCell>
-            <TableHeaderCell className="whitespace-nowrap">Judul</TableHeaderCell>
-            <TableHeaderCell className="w-28 text-center whitespace-nowrap">Status</TableHeaderCell>
-            <TableHeaderCell className="whitespace-nowrap">Ringkasan</TableHeaderCell>
-            <TableHeaderCell className="w-32 whitespace-nowrap">Kategori</TableHeaderCell>
-            <TableHeaderCell className="w-36 whitespace-nowrap">Tanggal</TableHeaderCell>
-            <TableHeaderCell className="w-44 whitespace-nowrap">Penulis</TableHeaderCell>
-            <TableHeaderCell stickyRight className="w-24 text-center whitespace-nowrap">Aksi</TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredData.length === 0 ? (
+      {isLoading ? (
+        <TableSkeleton rows={5} cols={8} />
+      ) : (
+        <Table>
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={8} className="py-8 text-center text-zinc-400">
-                Tidak ada pengumuman yang sesuai dengan pencarian.
-              </TableCell>
+              <TableHeaderCell className="w-12 text-center whitespace-nowrap">No</TableHeaderCell>
+              <TableHeaderCell className="whitespace-nowrap">Judul</TableHeaderCell>
+              <TableHeaderCell className="w-28 text-center whitespace-nowrap">Status</TableHeaderCell>
+              <TableHeaderCell className="whitespace-nowrap">Ringkasan</TableHeaderCell>
+              <TableHeaderCell className="w-32 whitespace-nowrap">Kategori</TableHeaderCell>
+              <TableHeaderCell className="w-36 whitespace-nowrap">Tanggal</TableHeaderCell>
+              <TableHeaderCell className="w-44 whitespace-nowrap">Penulis</TableHeaderCell>
+              <TableHeaderCell stickyRight className="w-24 text-center whitespace-nowrap">Aksi</TableHeaderCell>
             </TableRow>
-          ) : (
+          </TableHead>
+          <TableBody>
+            {loadError ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-red-500 font-medium">
+                  Gagal memuat data dari database: {loadError}
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-zinc-400">
+                  Tidak ada pengumuman yang sesuai dengan pencarian.
+                </TableCell>
+              </TableRow>
+            ) : (
             filteredData.map((item, idx) => (
-              <TableRow key={item.slug}>
+              <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">{idx + 1}</TableCell>
                 <TableCell className="max-w-xs truncate" title={item.title}>
                   {item.title}
                 </TableCell>
                 <TableCell className="text-center whitespace-nowrap">
-                  <Badge variant={item.isActive !== false ? "success" : "secondary"}>
-                    {item.isActive !== false ? "Aktif" : "Tidak Aktif"}
+                  <Badge variant={item.is_active ? "success" : "secondary"}>
+                    {item.is_active ? "Aktif" : "Tidak Aktif"}
                   </Badge>
                 </TableCell>
                 <TableCell className="max-w-sm truncate" title={item.excerpt}>
@@ -298,6 +381,7 @@ export default function AdminPengumumanPage() {
           )}
         </TableBody>
       </Table>
+      )}
 
       {/* Modal Form Tambah / Edit */}
       <Modal
@@ -391,8 +475,12 @@ export default function AdminPengumumanPage() {
             >
               Batal
             </Button>
-            <Button type="submit" variant="primary" size="md">
-              {editingItem ? "Simpan Perubahan" : "Tambah Pengumuman"}
+            <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Menyimpan..."
+                : editingItem
+                ? "Simpan Perubahan"
+                : "Tambah Pengumuman"}
             </Button>
           </div>
         </form>

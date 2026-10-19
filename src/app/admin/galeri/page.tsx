@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import {
@@ -9,8 +9,11 @@ import {
   HiOutlineVideoCamera,
   HiOutlinePencilSquare,
   HiOutlineTrash,
+  HiOutlineArrowUpTray,
 } from "react-icons/hi2";
-import { galleryItems, type GalleryItem } from "@/app/(public)/galeri/data";
+import { supabase } from "@/lib/supabase/client";
+import type { GalleryItemRecord } from "@/lib/services/gallery";
+import { uploadMediaFile } from "@/lib/services/storage";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -24,6 +27,7 @@ import {
   TableHeaderCell,
   TableCell,
 } from "@/components/ui/Table";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
 
@@ -55,40 +59,78 @@ const extractYouTubeId = (urlOrId: string): string => {
   return match ? match[1] : trimmed;
 };
 
+interface GalleryFormImage {
+  id: string;
+  file?: File;
+  previewUrl: string;
+  name: string;
+}
+
 export default function AdminGaleriPage() {
-  const [data, setData] = useState<GalleryItem[]>(galleryItems);
+  const [data, setData] = useState<GalleryItemRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState("Semua");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<GalleryItemRecord | null>(null);
 
   // Form State
   const [formType, setFormType] = useState<"photo" | "video">("photo");
   const [formTitle, setFormTitle] = useState("");
   const [formCategory, setFormCategory] = useState("Ekstrakurikuler");
-  const [formDate, setFormDate] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formYoutubeId, setFormYoutubeId] = useState("");
-  const [formImages, setFormImages] = useState<string[]>([]);
-  const [formNewImage, setFormNewImage] = useState("");
+  const [formImages, setFormImages] = useState<GalleryFormImage[]>([]);
   const [formIsActive, setFormIsActive] = useState(true);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch data from Supabase
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      const { data: records, error } = await supabase
+        .from("gallery_items")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (ignore) return;
+      if (error) {
+        setLoadError(error.message);
+        Swal.fire("Error Database", "Gagal memuat galeri: " + error.message, "error");
+      } else {
+        setData(records || []);
+      }
+      setIsLoading(false);
+    };
+
+    void load();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Derived YouTube ID preview
   const currentYoutubeId = extractYouTubeId(formYoutubeId);
 
   // Categories list derived from current data
-  const categories = Array.from(
+  const defaultCategories = ["Ekstrakurikuler", "Kegiatan", "Upacara", "Prestasi", "Video Profil"];
+  const dynamicCategories = Array.from(
     new Set(data.map((item) => item.category).filter(Boolean))
   );
+  const categories = Array.from(new Set([...defaultCategories, ...dynamicCategories]));
 
   // Filter Data
   const filteredData = data.filter((item) => {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.desc.toLowerCase().includes(search.toLowerCase());
+      (item.desc || "").toLowerCase().includes(search.toLowerCase());
     const matchType =
       selectedType === "Semua" ||
       (selectedType === "Foto" && item.type === "photo") ||
@@ -104,46 +146,82 @@ export default function AdminGaleriPage() {
     setFormType("photo");
     setFormTitle("");
     setFormCategory(categories[0] || "Ekstrakurikuler");
-    setFormDate(getTodayFormatted());
     setFormDesc("");
     setFormYoutubeId("");
-    setFormImages(["/img/pramuka.jpeg"]);
-    setFormNewImage("");
+    setFormImages([]);
     setFormIsActive(true);
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (item: GalleryItem) => {
+  const handleOpenEdit = (item: GalleryItemRecord) => {
     setEditingItem(item);
     setFormType(item.type || "photo");
     setFormTitle(item.title);
     setFormCategory(item.category);
-    setFormDate(item.date);
-    setFormDesc(item.desc);
-    setFormYoutubeId(item.youtubeId || "");
-    setFormImages(
+    setFormDesc(item.desc || "");
+    setFormYoutubeId(item.youtube_id || "");
+    const rawImages =
       item.images && item.images.length > 0
-        ? [...item.images]
+        ? item.images
         : item.src
         ? [item.src]
-        : []
+        : [];
+    setFormImages(
+      rawImages.map((url, i) => ({
+        id: `existing-${i}-${url}`,
+        previewUrl: url,
+        name: url.split("/").pop() || url,
+      }))
     );
-    setFormNewImage("");
-    setFormIsActive(item.isActive !== false);
+    setFormIsActive(item.is_active);
     setIsModalOpen(true);
   };
 
-  const handleAddImage = () => {
-    if (!formNewImage.trim()) return;
-    setFormImages((prev) => [...prev, formNewImage.trim()]);
-    setFormNewImage("");
+  const handleCloseModal = () => {
+    if (isSubmitting) return;
+    formImages.forEach((img) => {
+      if (img.previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(img.previewUrl);
+      }
+    });
+    setIsModalOpen(false);
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
-    setFormImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    setFormImages((prev) => {
+      const target = prev[indexToRemove];
+      if (target?.previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(target.previewUrl);
+      }
+      return prev.filter((_, idx) => idx !== indexToRemove);
+    });
   };
 
-  const handleDelete = (item: GalleryItem) => {
+  // Pilih file foto secara lokal (belum diunggah ke Storage)
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newEntries: GalleryFormImage[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      newEntries.push({
+        id: `staged-${Date.now()}-${i}-${Math.random()}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+        name: file.name,
+      });
+    }
+
+    setFormImages((prev) => [...prev, ...newEntries]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDelete = (item: GalleryItemRecord) => {
     Swal.fire({
       title: "Hapus Galeri?",
       text: `Apakah Anda yakin ingin menghapus "${item.title}"?`,
@@ -153,8 +231,18 @@ export default function AdminGaleriPage() {
       cancelButtonColor: "#64748b",
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        const { error } = await supabase
+          .from("gallery_items")
+          .delete()
+          .eq("id", item.id);
+
+        if (error) {
+          Swal.fire("Gagal", "Gagal menghapus: " + error.message, "error");
+          return;
+        }
+
         setData((prev) => prev.filter((g) => g.id !== item.id));
         Swal.fire({
           title: "Terhapus!",
@@ -167,98 +255,161 @@ export default function AdminGaleriPage() {
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formTitle.trim()) {
-      Swal.fire({
-        title: "Perhatian",
-        text: "Judul kegiatan wajib diisi!",
-        icon: "warning",
-      });
+      Swal.fire("Perhatian", "Judul kegiatan wajib diisi!", "warning");
       return;
     }
 
     const cleanYoutubeId =
-      formType === "video" ? extractYouTubeId(formYoutubeId) : undefined;
+      formType === "video" ? extractYouTubeId(formYoutubeId) : null;
 
-    // Cover otomatis:
-    // Jika video: ambil dari thumbnail YouTube
-    // Jika foto: ambil dari gambar pertama di album
-    let autoCover = "/img/pramuka.jpeg";
-    if (formType === "video") {
-      autoCover = cleanYoutubeId
-        ? `https://img.youtube.com/vi/${cleanYoutubeId}/hqdefault.jpg`
-        : "/img/pramuka.jpeg";
-    } else {
-      autoCover = formImages.length > 0 ? formImages[0] : "/img/pramuka.jpeg";
+    if (formType === "photo" && formImages.length === 0) {
+      Swal.fire("Perhatian", "Pilih minimal 1 foto kegiatan untuk album foto.", "warning");
+      return;
     }
 
-    const finalImages =
-      formType === "photo"
-        ? formImages.length > 0
-          ? formImages
-          : [autoCover]
-        : undefined;
-
-    if (editingItem) {
-      // Update
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                type: formType,
-                title: formTitle.trim(),
-                category: formCategory.trim(),
-                date: formDate.trim() || getTodayFormatted(),
-                desc: formDesc.trim(),
-                src: autoCover,
-                youtubeId: cleanYoutubeId,
-                images: finalImages,
-                isActive: formIsActive,
-              }
-            : item
-        )
-      );
-      Swal.fire({
-        title: "Berhasil!",
-        text: "Galeri kegiatan berhasil diperbarui.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } else {
-      // Create new
-      const newItem: GalleryItem = {
-        id: `galeri-${Date.now()}`,
-        type: formType,
-        title: formTitle.trim(),
-        category: formCategory.trim(),
-        date: formDate.trim() || getTodayFormatted(),
-        desc: formDesc.trim(),
-        src: autoCover,
-        youtubeId: cleanYoutubeId,
-        images: finalImages,
-        isActive: formIsActive,
-      };
-
-      setData((prev) => [newItem, ...prev]);
-      Swal.fire({
-        title: "Berhasil!",
-        text: "Galeri kegiatan baru berhasil ditambahkan.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+    if (formType === "video" && !cleanYoutubeId) {
+      Swal.fire("Perhatian", "Masukkan link atau ID video YouTube yang valid.", "warning");
+      return;
     }
 
-    setIsModalOpen(false);
+    const confirmResult = await Swal.fire({
+      title: "Konfirmasi Simpan",
+      text: editingItem
+        ? "Apakah Anda yakin ingin memperbarui galeri kegiatan ini?"
+        : "Apakah Anda yakin ingin menambahkan galeri kegiatan baru ini?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#059669",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, Simpan",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Unggah hanya foto baru ke Supabase Storage pada saat ini
+      const uploadedUrls: string[] = [];
+      if (formType === "photo") {
+        for (const img of formImages) {
+          if (img.file) {
+            const publicUrl = await uploadMediaFile(img.file, "gallery", "media");
+            uploadedUrls.push(publicUrl);
+          } else {
+            uploadedUrls.push(img.previewUrl);
+          }
+        }
+      }
+
+      const finalImages = formType === "photo" ? uploadedUrls : [];
+
+      let autoCover = "";
+      if (formType === "video") {
+        autoCover = cleanYoutubeId
+          ? `https://img.youtube.com/vi/${cleanYoutubeId}/hqdefault.jpg`
+          : "";
+      } else {
+        autoCover = finalImages.length > 0 ? finalImages[0] : "";
+      }
+
+      if (editingItem) {
+        // Update
+        const { data: updated, error } = await supabase
+          .from("gallery_items")
+          .update({
+            type: formType,
+            title: formTitle.trim(),
+            category: formCategory.trim(),
+            date: editingItem.date || getTodayFormatted(),
+            desc: formDesc.trim(),
+            src: autoCover,
+            youtube_id: cleanYoutubeId,
+            images: finalImages,
+            is_active: formIsActive,
+          })
+          .eq("id", editingItem.id)
+          .select()
+          .single();
+
+        setIsSubmitting(false);
+
+        if (error) {
+          Swal.fire("Gagal", "Gagal memperbarui: " + error.message, "error");
+          return;
+        }
+
+        setData((prev) =>
+          prev.map((item) => (item.id === editingItem.id ? (updated as GalleryItemRecord) : item))
+        );
+
+        Swal.fire({
+          title: "Berhasil!",
+          text: "Galeri kegiatan berhasil diperbarui.",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        // Create new
+        const { data: created, error } = await supabase
+          .from("gallery_items")
+          .insert({
+            type: formType,
+            title: formTitle.trim(),
+            category: formCategory.trim(),
+            date: getTodayFormatted(),
+            desc: formDesc.trim(),
+            src: autoCover,
+            youtube_id: cleanYoutubeId,
+            images: finalImages,
+            is_active: formIsActive,
+          })
+          .select()
+          .single();
+
+        setIsSubmitting(false);
+
+        if (error) {
+          Swal.fire("Gagal", "Gagal menambahkan: " + error.message, "error");
+          return;
+        }
+
+        setData((prev) => [created as GalleryItemRecord, ...prev]);
+
+        Swal.fire({
+          title: "Berhasil!",
+          text: "Galeri kegiatan baru berhasil ditambahkan.",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+
+      // Bersihkan blob URLs
+      formImages.forEach((img) => {
+        if (img.previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(img.previewUrl);
+        }
+      });
+      setIsModalOpen(false);
+    } catch (err: unknown) {
+      setIsSubmitting(false);
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan tidak terduga saat menyimpan";
+      Swal.fire("Gagal Menyimpan", msg, "error");
+    }
   };
 
   return (
     <div className="space-y-4">
-      {/* Header Tanpa Pembungkus & Subjudul */}
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
           Galeri Kegiatan
@@ -273,7 +424,7 @@ export default function AdminGaleriPage() {
         </Button>
       </div>
 
-      {/* Table Controls (Search & Filter) Standar */}
+      {/* Table Controls (Search & Filter) */}
       <TableControls
         searchTerm={search}
         onSearchChange={setSearch}
@@ -283,7 +434,7 @@ export default function AdminGaleriPage() {
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
         >
-          <option value="Semua">Semua Tipe</option>
+          <option value="Semua">Semua</option>
           <option value="Foto">Foto</option>
           <option value="Video">Video</option>
         </TableFilterSelect>
@@ -292,7 +443,7 @@ export default function AdminGaleriPage() {
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
         >
-          <option value="Semua">Semua Kategori</option>
+          <option value="Semua">Semua</option>
           {categories.map((cat) => (
             <option key={cat} value={cat}>
               {cat}
@@ -301,36 +452,48 @@ export default function AdminGaleriPage() {
         </TableFilterSelect>
       </TableControls>
 
+      {/* Error Banner */}
+      {loadError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400">
+          Gagal mengambil data dari database: {loadError}
+        </div>
+      )}
+
       {/* Table Section */}
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeaderCell className="w-12 text-center">No</TableHeaderCell>
-            <TableHeaderCell>Judul Kegiatan</TableHeaderCell>
-            <TableHeaderCell className="w-28 text-center">Tipe</TableHeaderCell>
-            <TableHeaderCell>Deskripsi</TableHeaderCell>
-            <TableHeaderCell className="w-36">Kategori</TableHeaderCell>
-            <TableHeaderCell className="w-36">Media Info</TableHeaderCell>
-            <TableHeaderCell className="w-32">Tanggal</TableHeaderCell>
-            <TableHeaderCell className="w-28 text-center">Status</TableHeaderCell>
-            <TableHeaderCell
-              stickyRight
-              className="w-28 text-center whitespace-nowrap"
-            >
-              Aksi
-            </TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredData.length === 0 ? (
+      {isLoading ? (
+        <TableSkeleton rows={5} cols={9} />
+      ) : (
+        <Table>
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={9} className="py-8 text-center text-zinc-400">
-                Tidak ada data galeri kegiatan yang ditemukan.
-              </TableCell>
+              <TableHeaderCell className="w-12 text-center">No</TableHeaderCell>
+              <TableHeaderCell>Judul Kegiatan</TableHeaderCell>
+              <TableHeaderCell className="w-28 text-center">Tipe</TableHeaderCell>
+              <TableHeaderCell>Deskripsi</TableHeaderCell>
+              <TableHeaderCell className="w-36">Kategori</TableHeaderCell>
+              <TableHeaderCell className="w-36">Media Info</TableHeaderCell>
+              <TableHeaderCell className="w-32">Tanggal</TableHeaderCell>
+              <TableHeaderCell className="w-28 text-center">Status</TableHeaderCell>
+              <TableHeaderCell
+                stickyRight
+                className="w-28 text-center whitespace-nowrap"
+              >
+                Aksi
+              </TableHeaderCell>
             </TableRow>
-          ) : (
+          </TableHead>
+          <TableBody>
+            {filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="py-8 text-center text-zinc-400">
+                  Tidak ada data galeri kegiatan yang ditemukan.
+                </TableCell>
+              </TableRow>
+            ) : (
             filteredData.map((item, index) => {
               const isVideo = item.type === "video";
+              const coverThumb =
+                item.src || (item.images && item.images[0]) || "/img/pramuka.jpeg";
 
               return (
                 <TableRow key={item.id}>
@@ -353,43 +516,57 @@ export default function AdminGaleriPage() {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="max-w-sm truncate" title={item.desc}>
-                    {item.desc}
+                  <TableCell
+                    className="max-w-xs truncate text-zinc-500 dark:text-zinc-400"
+                    title={item.desc || ""}
+                  >
+                    {item.desc || "-"}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
-                    {item.category}
+                    <Badge variant="secondary">{item.category}</Badge>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {isVideo
-                      ? "1 Video (YouTube)"
-                      : `${item.images?.length || 1} Foto Album`}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="relative h-9 w-12 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+                        <Image
+                          src={coverThumb}
+                          alt={item.title}
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                          unoptimized={coverThumb.startsWith("http")}
+                        />
+                      </div>
+                      <span className="text-xs text-zinc-500">
+                        {isVideo
+                          ? "YouTube"
+                          : `${item.images?.length || 1} Foto`}
+                      </span>
+                    </div>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">
+                  <TableCell className="whitespace-nowrap text-xs text-zinc-500">
                     {item.date}
                   </TableCell>
                   <TableCell className="text-center whitespace-nowrap">
-                    {item.isActive !== false ? (
+                    {item.is_active ? (
                       <Badge variant="success">Aktif</Badge>
                     ) : (
-                      <Badge variant="secondary">Nonaktif</Badge>
+                      <Badge variant="secondary">Draft</Badge>
                     )}
                   </TableCell>
-                  <TableCell
-                    stickyRight
-                    className="text-center whitespace-nowrap"
-                  >
-                    <div className="flex items-center justify-center gap-1.5">
+                  <TableCell stickyRight className="text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1">
                       <ActionButton
                         variant="edit"
-                        onClick={() => handleOpenEdit(item)}
                         title="Edit Galeri"
+                        onClick={() => handleOpenEdit(item)}
                       >
                         <HiOutlinePencilSquare className="h-4 w-4" />
                       </ActionButton>
                       <ActionButton
                         variant="delete"
-                        onClick={() => handleDelete(item)}
                         title="Hapus Galeri"
+                        onClick={() => handleDelete(item)}
                       >
                         <HiOutlineTrash className="h-4 w-4" />
                       </ActionButton>
@@ -401,31 +578,30 @@ export default function AdminGaleriPage() {
           )}
         </TableBody>
       </Table>
+      )}
 
       {/* Modal Form Tambah / Edit */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         title={editingItem ? "Edit Galeri Kegiatan" : "Tambah Galeri Kegiatan"}
-        size="3xl"
+        size="2xl"
       >
-        <form onSubmit={handleSave} className="space-y-4">
-          {/* Switch Tipe Media */}
+        <form onSubmit={handleSave} className="space-y-4 pt-2">
+          {/* Tipe Media ToggleSwitch */}
           <div>
-            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1.5">
               Tipe Media
             </label>
-            <div>
-              <ToggleSwitch
-                checked={formType === "photo"}
-                onChange={(isPhoto) => setFormType(isPhoto ? "photo" : "video")}
-                labels={["Album Foto", "Video YouTube"]}
-                size="md"
-              />
-            </div>
+            <ToggleSwitch
+              checked={formType === "photo"}
+              onChange={(isPhoto) => setFormType(isPhoto ? "photo" : "video")}
+              labels={["Album Foto", "Video YouTube"]}
+              size="sm"
+            />
           </div>
 
-          {/* Baris 1: Judul Kegiatan */}
+          {/* Judul Kegiatan */}
           <div>
             <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
               Judul Kegiatan <span className="text-rose-500">*</span>
@@ -435,68 +611,54 @@ export default function AdminGaleriPage() {
               required
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              placeholder="Contoh: Kegiatan Kepramukaan Santri"
-              className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+              placeholder="Contoh: Latihan Gabungan Pramuka Penggalang"
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
             />
           </div>
 
-          {/* Baris 2: Kategori & Tanggal */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                Kategori
-              </label>
-              <input
-                type="text"
-                value={formCategory}
-                onChange={(e) => setFormCategory(e.target.value)}
-                placeholder="Contoh: Ekstrakurikuler, Kedisiplinan"
-                className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                Tanggal Kegiatan
-              </label>
-              <input
-                type="text"
-                value={formDate}
-                onChange={(e) => setFormDate(e.target.value)}
-                placeholder="Contoh: 18 Oktober 2026"
-                className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
-              />
-            </div>
+          {/* Kategori Kegiatan (Full Width) */}
+          <div>
+            <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+              Kategori Kegiatan
+            </label>
+            <input
+              type="text"
+              value={formCategory}
+              onChange={(e) => setFormCategory(e.target.value)}
+              placeholder="Contoh: Ekstrakurikuler"
+              list="galeri-categories"
+              className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200"
+            />
+            <datalist id="galeri-categories">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </div>
 
-          {/* Input Spesifik Tipe Video dengan Preview Otomatis */}
+          {/* Input Spesifik Tipe Video */}
           {formType === "video" ? (
-            <div className="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3.5 dark:border-zinc-800 dark:bg-zinc-950/60">
+            <div className="space-y-3 rounded-xl bg-zinc-50 p-3.5 dark:border-zinc-800 dark:bg-zinc-950/60">
               <div>
                 <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
-                  Link atau ID YouTube <span className="text-rose-500">*</span>
+                  URL Video atau ID YouTube <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={formYoutubeId}
                   onChange={(e) => setFormYoutubeId(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=... atau ID video (7okSQjjabgk)"
+                  placeholder="https://www.youtube.com/watch?v=7okSQjjabgk atau 7okSQjjabgk"
                   className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
                 />
-                <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Sistem otomatis mendeteksi ID dan menghasilkan cover thumbnail dari video ini.
-                </p>
               </div>
 
-              {/* Kotak Preview Video Otomatis */}
+              {/* Preview Player YouTube */}
               {currentYoutubeId && (
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
-                    Preview Video
-                  </label>
-                  <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-xl border border-zinc-200 bg-black shadow-sm dark:border-zinc-800">
+                <div className="pt-1">
+                  <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800 bg-black">
                     <iframe
-                      src={`https://www.youtube.com/embed/${currentYoutubeId}`}
+                      src={`https://www.youtube-nocookie.com/embed/${currentYoutubeId}`}
                       title="YouTube video preview"
                       className="h-full w-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -507,48 +669,48 @@ export default function AdminGaleriPage() {
               )}
             </div>
           ) : (
-            /* Input Spesifik Tipe Foto dengan Cover Otomatis dari Gambar Pertama */
-            <div className="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-3.5 dark:border-zinc-800 dark:bg-zinc-950/60">
+            /* Input Spesifik Tipe Foto dengan Upload File Storage */
+            <div className="space-y-3 rounded-xl bg-zinc-50/60 p-3.5 dark:border-zinc-800 dark:bg-zinc-950/60">
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    Foto Kegiatan Album ({formImages.length} Foto)
+                    Foto Album Kegiatan ({formImages.length} Foto)
                   </label>
                   <span className="text-[11px] text-rose-600 italic dark:text-rose-400">
-                    *Foto pertama akan menjadi cover utama
+                    *Foto pertama menjadi cover utama
                   </span>
                 </div>
 
-                <div className="flex gap-2 mb-2.5">
+                {/* Upload Button */}
+                <div className="mb-2.5">
                   <input
-                    type="text"
-                    value={formNewImage}
-                    onChange={(e) => setFormNewImage(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddImage();
-                      }
-                    }}
-                    placeholder="Masukkan path/URL foto (contoh: /img/pramuka2.jpeg)"
-                    className="flex-1 rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="galeri-file-upload"
                   />
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="outline"
                     size="sm"
-                    onClick={handleAddImage}
+                    disabled={isSubmitting}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-1.5 bg-white dark:bg-zinc-900 border-dashed hover:border-emerald-500"
                   >
-                    Tambah Foto
+                    <HiOutlineArrowUpTray className="h-4 w-4 text-emerald-600" />
+                    <span>Pilih Foto</span>
                   </Button>
                 </div>
 
-                {/* List Foto Album dengan preview cover pertama */}
+                {/* List Foto Album */}
                 {formImages.length > 0 && (
                   <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto pr-1">
                     {formImages.map((img, idx) => (
                       <div
-                        key={idx}
+                        key={img.id}
                         className={`flex items-center justify-between rounded-lg border p-2 text-xs transition ${
                           idx === 0
                             ? "border-emerald-300 bg-emerald-50/50 dark:border-emerald-800/60 dark:bg-emerald-950/20"
@@ -558,16 +720,16 @@ export default function AdminGaleriPage() {
                         <div className="flex items-center gap-2.5 overflow-hidden">
                           <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
                             <Image
-                              src={img}
+                              src={img.previewUrl}
                               alt={`Foto ${idx + 1}`}
                               fill
                               sizes="32px"
                               className="object-cover"
-                              unoptimized={img.startsWith("http")}
+                              unoptimized
                             />
                           </div>
                           <span className="truncate font-mono text-[11px] text-zinc-700 dark:text-zinc-300">
-                            {img}
+                            {img.name}
                           </span>
                           {idx === 0 && (
                             <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
@@ -616,7 +778,7 @@ export default function AdminGaleriPage() {
               onClick={() => setFormIsActive(!formIsActive)}
               className="text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
             >
-              Tampilkan di Halaman Galeri Publik
+              Publish
             </span>
           </div>
 
@@ -626,12 +788,21 @@ export default function AdminGaleriPage() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsModalOpen(false)}
+              disabled={isSubmitting}
+              onClick={handleCloseModal}
             >
               Batal
             </Button>
-            <Button type="submit" size="sm">
-              {editingItem ? "Simpan Perubahan" : "Tambah Galeri"}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Menyimpan & Mengunggah..."
+                : editingItem
+                ? "Simpan Perubahan"
+                : "Tambah Galeri"}
             </Button>
           </div>
         </form>

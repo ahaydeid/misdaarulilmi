@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Modal from "@/app/components/modal";
 
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  youtubeId?: string;
-  title?: string;
+  youtubeId?: string | null;
+  title?: string | null;
 }
 
 export default function VideoModal({
@@ -16,16 +16,16 @@ export default function VideoModal({
   youtubeId,
   title,
 }: VideoModalProps) {
-  // Simpan data terakhir agar animasi zoom out modal tetap berjalan utuh saat parent me-reset state
+  const [prevId, setPrevId] = useState(youtubeId);
   const [activeId, setActiveId] = useState(youtubeId);
   const [activeTitle, setActiveTitle] = useState(title);
 
-  useEffect(() => {
-    if (youtubeId) {
-      setActiveId(youtubeId);
-      setActiveTitle(title);
-    }
-  }, [youtubeId, title]);
+  // Synchronous state adjustment when props change without effect cascade
+  if (youtubeId && youtubeId !== prevId) {
+    setPrevId(youtubeId);
+    setActiveId(youtubeId);
+    setActiveTitle(title);
+  }
 
   return (
     <Modal

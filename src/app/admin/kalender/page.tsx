@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import {
   HiOutlinePlus,
@@ -20,15 +20,12 @@ import {
   TableHeaderCell,
   TableCell,
 } from "@/components/ui/Table";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import Modal from "@/app/components/modal";
+import { supabase } from "@/lib/supabase/client";
+import type { CalendarEventRecord, EventCategory } from "@/lib/services/calendar";
 
-import {
-  calendarEventsData,
-  type CalendarEventItem,
-  type EventCategory,
-} from "@/app/(public)/kalender-pendidikan/data";
-
-const formatDateDisplay = (startDate: string, endDate?: string): string => {
+const formatDateDisplay = (startDate: string, endDate?: string | null): string => {
   if (!startDate) return "-";
 
   const options: Intl.DateTimeFormatOptions = {
@@ -50,13 +47,17 @@ const formatDateDisplay = (startDate: string, endDate?: string): string => {
 };
 
 export default function AdminKalenderPage() {
-  const [data, setData] = useState<CalendarEventItem[]>(calendarEventsData);
+  const [data, setData] = useState<CalendarEventRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<CalendarEventItem | null>(null);
+  const [editingItem, setEditingItem] = useState<CalendarEventRecord | null>(null);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -67,11 +68,35 @@ export default function AdminKalenderPage() {
 
   const categories: EventCategory[] = ["Akademik", "Kegiatan", "Hari Libur"];
 
+  useEffect(() => {
+    let ignore = false;
+    const load = async () => {
+      const { data: records, error } = await supabase
+        .from("academic_calendar")
+        .select("*")
+        .order("start_date", { ascending: true });
+
+      if (ignore) return;
+      if (error) {
+        setLoadError(error.message);
+        Swal.fire("Error Database", "Gagal memuat agenda: " + error.message, "error");
+      } else {
+        setData((records as CalendarEventRecord[]) || []);
+      }
+      setIsLoading(false);
+    };
+
+    void load();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   // Filter Data
   const filteredData = data.filter((item) => {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
+      ((item.description || "").toLowerCase().includes(search.toLowerCase()));
     const matchCategory =
       selectedCategory === "Semua" || item.category === selectedCategory;
     return matchSearch && matchCategory;
@@ -87,17 +112,17 @@ export default function AdminKalenderPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (item: CalendarEventItem) => {
+  const handleOpenEdit = (item: CalendarEventRecord) => {
     setEditingItem(item);
     setTitle(item.title);
     setCategory(item.category);
-    setStartDate(item.startDate);
-    setEndDate(item.endDate || "");
+    setStartDate(item.start_date);
+    setEndDate(item.end_date || "");
     setDescription(item.description || "");
     setIsModalOpen(true);
   };
 
-  const handleDelete = (item: CalendarEventItem) => {
+  const handleDelete = (item: CalendarEventRecord) => {
     Swal.fire({
       title: "Hapus Agenda?",
       text: `Apakah Anda yakin ingin menghapus agenda "${item.title}"?`,
@@ -107,8 +132,18 @@ export default function AdminKalenderPage() {
       cancelButtonColor: "#64748b",
       confirmButtonText: "Ya, Hapus",
       cancelButtonText: "Batal",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        const { error } = await supabase
+          .from("academic_calendar")
+          .delete()
+          .eq("id", item.id);
+
+        if (error) {
+          Swal.fire("Gagal", "Gagal menghapus agenda: " + error.message, "error");
+          return;
+        }
+
         setData((prev) => prev.filter((a) => a.id !== item.id));
         Swal.fire({
           title: "Terhapus!",
@@ -121,7 +156,7 @@ export default function AdminKalenderPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim() || !startDate) {
@@ -134,19 +169,49 @@ export default function AdminKalenderPage() {
       return;
     }
 
+    const confirmResult = await Swal.fire({
+      title: "Konfirmasi Simpan",
+      text: editingItem
+        ? "Apakah Anda yakin ingin memperbarui agenda ini?"
+        : "Apakah Anda yakin ingin menambahkan agenda baru ini?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#059669",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, Simpan",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     if (editingItem) {
+      const { data: updated, error } = await supabase
+        .from("academic_calendar")
+        .update({
+          title: title.trim(),
+          category,
+          start_date: startDate,
+          end_date: endDate ? endDate : null,
+          description: description.trim() || null,
+        })
+        .eq("id", editingItem.id)
+        .select()
+        .single();
+
+      setIsSubmitting(false);
+
+      if (error) {
+        Swal.fire("Gagal", "Gagal memperbarui agenda: " + error.message, "error");
+        return;
+      }
+
       setData((prev) =>
         prev.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                title: title.trim(),
-                category,
-                startDate,
-                endDate: endDate ? endDate : undefined,
-                description: description.trim() || undefined,
-              }
-            : item
+          item.id === editingItem.id ? (updated as CalendarEventRecord) : item
         )
       );
 
@@ -158,16 +223,26 @@ export default function AdminKalenderPage() {
         showConfirmButton: false,
       });
     } else {
-      const newItem: CalendarEventItem = {
-        id: `cal-${Date.now()}`,
-        title: title.trim(),
-        category,
-        startDate,
-        endDate: endDate ? endDate : undefined,
-        description: description.trim() || undefined,
-      };
+      const { data: created, error } = await supabase
+        .from("academic_calendar")
+        .insert({
+          title: title.trim(),
+          category,
+          start_date: startDate,
+          end_date: endDate ? endDate : null,
+          description: description.trim() || null,
+        })
+        .select()
+        .single();
 
-      setData((prev) => [newItem, ...prev]);
+      setIsSubmitting(false);
+
+      if (error) {
+        Swal.fire("Gagal", "Gagal menambahkan agenda: " + error.message, "error");
+        return;
+      }
+
+      setData((prev) => [...prev, created as CalendarEventRecord]);
 
       Swal.fire({
         title: "Tersimpan!",
@@ -183,7 +258,7 @@ export default function AdminKalenderPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header Tanpa Pembungkus & Subjudul */}
+      {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
           Kalender Pendidikan
@@ -198,7 +273,7 @@ export default function AdminKalenderPage() {
         </Button>
       </div>
 
-      {/* Table Controls (Pencarian & Filter) Standar */}
+      {/* Table Controls (Pencarian & Filter) */}
       <TableControls
         searchTerm={search}
         onSearchChange={setSearch}
@@ -217,41 +292,51 @@ export default function AdminKalenderPage() {
         </TableFilterSelect>
       </TableControls>
 
+      {/* Error Alert */}
+      {loadError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400">
+          Gagal mengambil data dari database: {loadError}
+        </div>
+      )}
+
       {/* Tabel Data Agenda */}
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeaderCell className="w-12 text-center whitespace-nowrap">
-              No
-            </TableHeaderCell>
-            <TableHeaderCell className="whitespace-nowrap">
-              Nama Agenda
-            </TableHeaderCell>
-            <TableHeaderCell className="w-32 text-center whitespace-nowrap">
-              Kategori
-            </TableHeaderCell>
-            <TableHeaderCell className="w-48 whitespace-nowrap">
-              Waktu Pelaksanaan
-            </TableHeaderCell>
-            <TableHeaderCell className="whitespace-nowrap">
-              Keterangan
-            </TableHeaderCell>
-            <TableHeaderCell
-              stickyRight
-              className="w-24 text-center whitespace-nowrap"
-            >
-              Aksi
-            </TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredData.length === 0 ? (
+      {isLoading ? (
+        <TableSkeleton rows={5} cols={6} />
+      ) : (
+        <Table>
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-zinc-400">
-                Tidak ada agenda yang sesuai dengan pencarian.
-              </TableCell>
+              <TableHeaderCell className="w-12 text-center whitespace-nowrap">
+                No
+              </TableHeaderCell>
+              <TableHeaderCell className="whitespace-nowrap">
+                Nama Agenda
+              </TableHeaderCell>
+              <TableHeaderCell className="w-32 text-center whitespace-nowrap">
+                Kategori
+              </TableHeaderCell>
+              <TableHeaderCell className="w-48 whitespace-nowrap">
+                Waktu Pelaksanaan
+              </TableHeaderCell>
+              <TableHeaderCell className="whitespace-nowrap">
+                Keterangan
+              </TableHeaderCell>
+              <TableHeaderCell
+                stickyRight
+                className="w-24 text-center whitespace-nowrap"
+              >
+                Aksi
+              </TableHeaderCell>
             </TableRow>
-          ) : (
+          </TableHead>
+          <TableBody>
+            {filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-zinc-400">
+                  Tidak ada agenda yang sesuai dengan pencarian.
+                </TableCell>
+              </TableRow>
+            ) : (
             filteredData.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
@@ -266,9 +351,9 @@ export default function AdminKalenderPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatDateDisplay(item.startDate, item.endDate)}
+                  {formatDateDisplay(item.start_date, item.end_date)}
                 </TableCell>
-                <TableCell className="max-w-sm truncate" title={item.description}>
+                <TableCell className="max-w-sm truncate" title={item.description || ""}>
                   {item.description || "-"}
                 </TableCell>
                 <TableCell stickyRight className="text-center whitespace-nowrap">
@@ -294,6 +379,7 @@ export default function AdminKalenderPage() {
           )}
         </TableBody>
       </Table>
+      )}
 
       {/* Modal Form Tambah / Ubah Agenda */}
       <Modal
@@ -383,12 +469,22 @@ export default function AdminKalenderPage() {
               type="button"
               variant="outline"
               size="md"
+              disabled={isSubmitting}
               onClick={() => setIsModalOpen(false)}
             >
               Batal
             </Button>
-            <Button type="submit" variant="primary" size="md">
-              {editingItem ? "Simpan Perubahan" : "Tambah Agenda"}
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Menyimpan..."
+                : editingItem
+                ? "Simpan Perubahan"
+                : "Tambah Agenda"}
             </Button>
           </div>
         </form>

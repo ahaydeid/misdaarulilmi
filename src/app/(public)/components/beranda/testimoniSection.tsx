@@ -1,9 +1,23 @@
 import { FaQuoteLeft } from "react-icons/fa6";
 import Avatar from "@/components/ui/Avatar";
-import { testimonialsData } from "./testimoniData";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { TestimonialRecord } from "@/lib/services/testimonial";
 
-export default function TestimoniSection() {
-  const activeTestimonials = testimonialsData.filter((t) => t.isActive !== false);
+export default async function TestimoniSection() {
+  const supabase = await createServerSupabaseClient();
+  const { data: testimonials } = await supabase
+    .from("testimonials")
+    .select("*")
+    .eq("is_active", true)
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  const activeTestimonials = (testimonials as TestimonialRecord[]) || [];
+
+  if (activeTestimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-20 sm:py-28 overflow-hidden">
       <style>{`
@@ -38,7 +52,7 @@ export default function TestimoniSection() {
         <div className="marquee-track flex gap-6 pr-6">
           {[...activeTestimonials, ...activeTestimonials].map((testi, idx) => (
             <div
-              key={idx}
+              key={`${testi.id}-${idx}`}
               className="w-[320px] sm:w-[380px] shrink-0 flex flex-col justify-between rounded-2xl bg-zinc-100 p-7 dark:bg-zinc-800/80"
             >
               <div>
@@ -51,6 +65,7 @@ export default function TestimoniSection() {
               <div className="mt-6 flex items-center gap-3.5 border-t border-zinc-200/80 pt-4 dark:border-zinc-700">
                 <Avatar
                   name={testi.name}
+                  photo={testi.avatar_url}
                   size="smedium"
                   className="!w-10 !h-10 shrink-0"
                 />

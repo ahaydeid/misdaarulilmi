@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import HeroSection from "./components/beranda/heroSection";
 import ProgramUnggulan from "./components/beranda/programUnggulan";
 import SekilasMadrasah from "./components/beranda/sekilasMadrasah";
@@ -17,8 +18,12 @@ export default function HomePage() {
       <HeroSection />
       <ProgramUnggulan />
       <SekilasMadrasah />
-      <TestimoniSection />
-      <PengumumanTerbaru />
+      <Suspense fallback={null}>
+        <TestimoniSection />
+      </Suspense>
+      <Suspense fallback={<div className="py-20 text-center text-slate-400">Memuat pengumuman...</div>}>
+        <PengumumanTerbaru />
+      </Suspense>
     </div>
   );
 }

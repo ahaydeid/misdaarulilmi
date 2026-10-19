@@ -39,7 +39,7 @@ export default function KontakPage() {
               <FaEnvelope className="mt-1 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-500" />
               <div>
                 <strong className="block text-zinc-900 dark:text-zinc-100">Email Resmi</strong>
-                <span>info@misdaarulilmi.sch.id</span>
+                <span>midaarulilmi5@gmail.com</span>
               </div>
             </div>
 

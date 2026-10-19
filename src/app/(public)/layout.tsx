@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 
@@ -38,7 +38,9 @@ export default function PublicLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Navbar />
+      <Suspense fallback={<div className="h-16" />}>
+        <Navbar />
+      </Suspense>
       <main className="flex-1">{children}</main>
       <Footer />
     </div>
