@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Swal from "sweetalert2";
 import {
@@ -69,15 +69,26 @@ interface GalleryFormImage {
 
 export default function AdminGaleriPage() {
   const [data, setData] = useState<GalleryItemRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedType, setSelectedType] = useState("Semua");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search agar tidak query database setiap ketikan
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,61 +105,61 @@ export default function AdminGaleriPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch data from Supabase
-  useEffect(() => {
-    let ignore = false;
-    const load = async () => {
-      const { data: records, error } = await supabase
-        .from("gallery_items")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (ignore) return;
-      if (error) {
-        setLoadError(error.message);
-        Swal.fire("Error Database", "Gagal memuat galeri: " + error.message, "error");
-      } else {
-        setData(records || []);
-      }
-      setIsLoading(false);
-    };
-
-    void load();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
   // Derived YouTube ID preview
   const currentYoutubeId = extractYouTubeId(formYoutubeId);
 
-  // Categories list derived from current data
+  // Categories list
   const defaultCategories = ["Ekstrakurikuler", "Kegiatan", "Upacara", "Prestasi", "Video Profil"];
   const dynamicCategories = Array.from(
     new Set(data.map((item) => item.category).filter(Boolean))
   );
   const categories = Array.from(new Set([...defaultCategories, ...dynamicCategories]));
 
-  // Filter Data (Global Search, Type & Category)
-  const filteredData = data.filter((item) => {
-    const matchSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      (item.desc || "").toLowerCase().includes(search.toLowerCase());
-    const matchType =
-      selectedType === "Semua" ||
-      (selectedType === "Foto" && item.type === "photo") ||
-      (selectedType === "Video" && item.type === "video");
-    const matchCategory =
-      selectedCategory === "Semua" || item.category === selectedCategory;
+  // Server-Side Query dengan .range() dan count: "exact"
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
 
-    return matchSearch && matchType && matchCategory;
-  });
+    let query = supabase
+      .from("gallery_items")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+    if (debouncedSearch.trim()) {
+      const q = `%${debouncedSearch.trim()}%`;
+      query = query.or(`title.ilike.${q},desc.ilike.${q}`);
+    }
+
+    if (selectedType === "Foto") {
+      query = query.eq("type", "photo");
+    } else if (selectedType === "Video") {
+      query = query.eq("type", "video");
+    }
+
+    if (selectedCategory !== "Semua") {
+      query = query.eq("category", selectedCategory);
+    }
+
+    const { data: records, count, error } = await query;
+
+    if (error) {
+      setLoadError(error.message);
+      Swal.fire("Error Database", "Gagal memuat galeri: " + error.message, "error");
+    } else {
+      setData(records || []);
+      setTotalCount(count ?? 0);
+      setLoadError(null);
+    }
+    setIsLoading(false);
+  }, [currentPage, pageSize, debouncedSearch, selectedType, selectedCategory]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -206,22 +217,49 @@ export default function AdminGaleriPage() {
     });
   };
 
-  // Pilih file foto secara lokal (belum diunggah ke Storage)
+  // Pilih file foto secara lokal (maksimal 5 foto per album)
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newEntries: GalleryFormImage[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith("image/")) continue;
-      newEntries.push({
-        id: `staged-${Date.now()}-${i}-${Math.random()}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        name: file.name,
-      });
+    const MAX_PHOTOS = 5;
+    if (formImages.length >= MAX_PHOTOS) {
+      Swal.fire(
+        "Batas Maksimal Tercapai",
+        "Maksimal 5 foto per album kegiatan. Hapus salah satu foto terlebih dahulu jika ingin mengganti.",
+        "warning"
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
     }
+
+    const validFiles = Array.from(files).filter((file) =>
+      file.type.startsWith("image/")
+    );
+
+    if (validFiles.length === 0) {
+      Swal.fire("Format Tidak Sesuai", "Pilih file berformat gambar (JPG, PNG, WebP).", "warning");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    const remainingSlots = MAX_PHOTOS - formImages.length;
+    const filesToAdd = validFiles.slice(0, remainingSlots);
+
+    if (validFiles.length > remainingSlots) {
+      Swal.fire(
+        "Batas 5 Foto",
+        `Hanya ${remainingSlots} foto yang ditambahkan karena batas maksimal adalah ${MAX_PHOTOS} foto per album.`,
+        "info"
+      );
+    }
+
+    const newEntries: GalleryFormImage[] = filesToAdd.map((file, i) => ({
+      id: `staged-${Date.now()}-${i}-${Math.random()}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      name: file.name,
+    }));
 
     setFormImages((prev) => [...prev, ...newEntries]);
 
@@ -277,6 +315,11 @@ export default function AdminGaleriPage() {
 
     if (formType === "photo" && formImages.length === 0) {
       Swal.fire("Perhatian", "Pilih minimal 1 foto kegiatan untuk album foto.", "warning");
+      return;
+    }
+
+    if (formType === "photo" && formImages.length > 5) {
+      Swal.fire("Batas Maksimal", "Maksimal 5 foto per album kegiatan.", "warning");
       return;
     }
 
@@ -436,10 +479,7 @@ export default function AdminGaleriPage() {
       {/* Table Controls (Search, Filter & Baris Per Halaman) */}
       <TableControls
         searchTerm={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setCurrentPage(1);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Cari galeri kegiatan..."
         pageSize={pageSize}
         onPageSizeChange={(size) => {
@@ -506,14 +546,14 @@ export default function AdminGaleriPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="py-8 text-center text-zinc-400">
                   Tidak ada galeri kegiatan yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
             ) : (
-            paginatedData.map((item, index) => {
+            data.map((item, index) => {
               const isVideo = item.type === "video";
               const coverThumb =
                 item.src || (item.images && item.images[0]) || "/img/pramuka.jpeg";
@@ -603,7 +643,7 @@ export default function AdminGaleriPage() {
       </Table>
       )}
 
-      {!isLoading && filteredData.length > 0 && (
+      {!isLoading && totalCount > 0 && (
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -705,15 +745,15 @@ export default function AdminGaleriPage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    Foto Album Kegiatan ({formImages.length} Foto)
+                    Foto Album Kegiatan ({formImages.length}/5 Foto)
                   </label>
                   <span className="text-[11px] text-rose-600 italic dark:text-rose-400">
-                    *Foto pertama menjadi cover utama
+                    *Maksimal 5 foto, foto pertama menjadi cover utama
                   </span>
                 </div>
 
                 {/* Upload Button */}
-                <div className="mb-2.5">
+                <div className="mb-2.5 flex items-center gap-2">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -727,13 +767,22 @@ export default function AdminGaleriPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || formImages.length >= 5}
                     onClick={() => fileInputRef.current?.click()}
-                    className="gap-1.5 bg-white dark:bg-zinc-900 border-dashed hover:border-emerald-500"
+                    className="gap-1.5 bg-white dark:bg-zinc-900 border-dashed hover:border-emerald-500 disabled:opacity-50"
                   >
                     <HiOutlineArrowUpTray className="h-4 w-4 text-emerald-600" />
-                    <span>Pilih Foto</span>
+                    <span>
+                      {formImages.length >= 5
+                        ? "Batas Maksimal (5/5)"
+                        : "Pilih Foto"}
+                    </span>
                   </Button>
+                  {formImages.length >= 5 && (
+                    <span className="text-xs text-zinc-500">
+                      Maksimal 5 foto telah terpenuhi
+                    </span>
+                  )}
                 </div>
 
                 {/* List Foto Album */}

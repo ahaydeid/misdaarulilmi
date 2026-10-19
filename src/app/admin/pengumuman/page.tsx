@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import {
   HiOutlinePlus,
@@ -46,13 +46,24 @@ const generateExcerpt = (html: string, maxLen = 140): string => {
 
 export default function AdminPengumumanPage() {
   const [data, setData] = useState<AnnouncementRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search agar tidak spam query ke DB
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,44 +78,45 @@ export default function AdminPengumumanPage() {
 
   const categories = ["Akademik", "Kesiswaan", "Umum"];
 
+  // Server-Side Query dengan .range() dan count: "exact"
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+      .from("announcements")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (debouncedSearch.trim()) {
+      const q = `%${debouncedSearch.trim()}%`;
+      query = query.or(`title.ilike.${q},excerpt.ilike.${q}`);
+    }
+
+    if (selectedTag !== "Semua") {
+      query = query.eq("tag", selectedTag);
+    }
+
+    const { data: records, count, error } = await query;
+
+    if (error) {
+      setLoadError(error.message);
+      Swal.fire("Error Database", "Gagal memuat pengumuman: " + error.message, "error");
+    } else {
+      setData(records || []);
+      setTotalCount(count ?? 0);
+      setLoadError(null);
+    }
+    setIsLoading(false);
+  }, [currentPage, pageSize, debouncedSearch, selectedTag]);
+
   useEffect(() => {
-    let ignore = false;
-    const load = async () => {
-      const { data: records, error } = await supabase
-        .from("announcements")
-        .select("*")
-        .order("created_at", { ascending: false });
+    loadData();
+  }, [loadData]);
 
-      if (ignore) return;
-      if (error) {
-        setLoadError(error.message);
-        Swal.fire("Error Database", "Gagal memuat pengumuman: " + error.message, "error");
-      } else {
-        setData(records || []);
-      }
-      setIsLoading(false);
-    };
-
-    void load();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  // Filter Data (Global Search & Tag)
-  const filteredData = data.filter((item) => {
-    const matchSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.excerpt.toLowerCase().includes(search.toLowerCase());
-    const matchTag = selectedTag === "Semua" || item.tag === selectedTag;
-    return matchSearch && matchTag;
-  });
-
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -301,10 +313,7 @@ export default function AdminPengumumanPage() {
       {/* Table Controls (Search, Filter & Baris Per Halaman) Standar */}
       <TableControls
         searchTerm={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setCurrentPage(1);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Cari pengumuman..."
         pageSize={pageSize}
         onPageSizeChange={(size) => {
@@ -352,14 +361,14 @@ export default function AdminPengumumanPage() {
                   Gagal memuat data dari database: {loadError}
                 </TableCell>
               </TableRow>
-            ) : filteredData.length === 0 ? (
+            ) : data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="py-8 text-center text-zinc-400">
                   Tidak ada pengumuman yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
             ) : (
-            paginatedData.map((item, idx) => (
+            data.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
                   {(currentPage - 1) * pageSize + idx + 1}
@@ -405,7 +414,7 @@ export default function AdminPengumumanPage() {
       </Table>
       )}
 
-      {!isLoading && filteredData.length > 0 && (
+      {!isLoading && totalCount > 0 && (
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}

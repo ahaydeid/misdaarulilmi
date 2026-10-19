@@ -75,7 +75,7 @@ export function TableControls({
               className="w-full rounded-full border border-zinc-200 bg-white py-1.5 pl-8 pr-3 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:focus:border-emerald-500"
             />
           </div>
-        )}``
+        )}
       </div>
     </div>
   );
@@ -183,21 +183,21 @@ export function TablePagination({
           onClick={() => onPageChange(safeCurrentPage - 1)}
           disabled={safeCurrentPage <= 1}
           aria-label="Halaman Sebelumnya"
-          className="flex h-7 w-7 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+          className="flex h-8 w-8 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         >
-          <HiOutlineChevronLeft className="h-3.5 w-3.5" />
+          <HiOutlineChevronLeft className="h-4 w-4" />
         </button>
-        <span className="min-w-[48px] select-none text-center font-mono text-xs text-zinc-700 dark:text-zinc-300">
-          {safeCurrentPage} / {safeTotalPages}
+        <span className="min-w-[48px] select-none text-center text-base text-zinc-700 dark:text-zinc-300">
+          <span className="font-bold">{safeCurrentPage}</span> <span className='font-medium text-xs text-gray-400'>/ {safeTotalPages}</span>
         </span>
         <button
           type="button"
           onClick={() => onPageChange(safeCurrentPage + 1)}
           disabled={safeCurrentPage >= safeTotalPages}
           aria-label="Halaman Selanjutnya"
-          className="flex h-7 w-7 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+          className="flex h-8 w-8 items-center justify-center rounded border border-zinc-200 bg-white text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
         >
-          <HiOutlineChevronRight className="h-3.5 w-3.5" />
+          <HiOutlineChevronRight className="h-4 w-4" />
         </button>
       </div>
     </div>

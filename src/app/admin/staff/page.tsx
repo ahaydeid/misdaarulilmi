@@ -26,14 +26,27 @@ import Modal from "@/app/components/modal";
 import { supabase } from "@/lib/supabase/client";
 import { uploadMediaFile } from "@/lib/services/storage";
 import type { StaffMemberRecord } from "@/lib/services/staff";
+import PhotoZoomModal from "./components/PhotoZoomModal";
 
 export default function AdminStaffPage() {
   const [data, setData] = useState<StaffMemberRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [zoomedStaff, setZoomedStaff] = useState<StaffMemberRecord | null>(null);
+
+  // Debounce search agar tidak query database setiap ketikan
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,13 +59,24 @@ export default function AdminStaffPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isActive, setIsActive] = useState(true);
 
+  // Server-Side Query dengan .range() dan count: "exact"
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { data: records, error } = await supabase
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
       .from("staff_members")
-      .select("*")
-      .order("order_index", { ascending: true })
-      .order("created_at", { ascending: true });
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (debouncedSearch.trim()) {
+      const q = `%${debouncedSearch.trim()}%`;
+      query = query.or(`name.ilike.${q},subject.ilike.${q}`);
+    }
+
+    const { data: records, count, error } = await query;
 
     if (error) {
       Swal.fire({
@@ -62,27 +86,16 @@ export default function AdminStaffPage() {
       });
     } else {
       setData((records as StaffMemberRecord[]) || []);
+      setTotalCount(count ?? 0);
     }
     setLoading(false);
-  }, [supabase]);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Filter Data (Global Search)
-  const filteredData = data.filter((item) => {
-    const matchSearch =
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.subject.toLowerCase().includes(search.toLowerCase());
-    return matchSearch;
-  });
-
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -276,10 +289,7 @@ export default function AdminStaffPage() {
       {/* Table Controls (Pencarian & Baris Per Halaman) Standar */}
       <TableControls
         searchTerm={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setCurrentPage(1);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Cari staff..."
         pageSize={pageSize}
         onPageSizeChange={(size) => {
@@ -316,21 +326,32 @@ export default function AdminStaffPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="py-8 text-center text-zinc-400">
                   Tidak ada data staff yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
             ) : (
-            paginatedData.map((item, idx) => (
+            data.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
                   {(currentPage - 1) * pageSize + idx + 1}
                 </TableCell>
                 <TableCell className="max-w-xs truncate" title={item.name}>
                   <div className="flex items-center gap-2.5">
-                    <Avatar name={item.name} photo={item.photo_url} size="smedium" />
+                    {item.photo_url ? (
+                      <button
+                        type="button"
+                        onClick={() => setZoomedStaff(item)}
+                        className="group relative rounded-full transition-all hover:scale-110 hover:ring-2 hover:ring-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 active:scale-95 cursor-pointer"
+                        title={`Perbesar foto ${item.name}`}
+                      >
+                        <Avatar name={item.name} photo={item.photo_url} size="smedium" />
+                      </button>
+                    ) : (
+                      <Avatar name={item.name} photo={item.photo_url} size="smedium" />
+                    )}
                     <span className="truncate">{item.name}</span>
                   </div>
                 </TableCell>
@@ -367,7 +388,7 @@ export default function AdminStaffPage() {
       </Table>
       )}
 
-      {!loading && filteredData.length > 0 && (
+      {!loading && totalCount > 0 && (
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -485,6 +506,15 @@ export default function AdminStaffPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Modal Zoom Foto Staff */}
+      <PhotoZoomModal
+        isOpen={!!zoomedStaff}
+        onClose={() => setZoomedStaff(null)}
+        name={zoomedStaff?.name || ""}
+        photoUrl={zoomedStaff?.photo_url || null}
+        subject={zoomedStaff?.subject}
+      />
     </div>
   );
 }

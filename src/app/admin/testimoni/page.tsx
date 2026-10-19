@@ -29,11 +29,22 @@ import type { TestimonialRecord } from "@/lib/services/testimonial";
 
 export default function AdminTestimoniPage() {
   const [data, setData] = useState<TestimonialRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search agar tidak query database setiap ketikan
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,13 +58,24 @@ export default function AdminTestimoniPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isActive, setIsActive] = useState(true);
 
+  // Server-Side Query dengan .range() dan count: "exact"
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { data: records, error } = await supabase
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
       .from("testimonials")
-      .select("*")
-      .order("order_index", { ascending: true })
-      .order("created_at", { ascending: false });
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (debouncedSearch.trim()) {
+      const q = `%${debouncedSearch.trim()}%`;
+      query = query.or(`name.ilike.${q},role.ilike.${q},quote.ilike.${q}`);
+    }
+
+    const { data: records, count, error } = await query;
 
     if (error) {
       Swal.fire({
@@ -63,28 +85,16 @@ export default function AdminTestimoniPage() {
       });
     } else {
       setData((records as TestimonialRecord[]) || []);
+      setTotalCount(count ?? 0);
     }
     setLoading(false);
-  }, []);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Filter Data (Global Search)
-  const filteredData = data.filter((item) => {
-    const matchSearch =
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.role.toLowerCase().includes(search.toLowerCase()) ||
-      item.quote.toLowerCase().includes(search.toLowerCase());
-    return matchSearch;
-  });
-
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -290,10 +300,7 @@ export default function AdminTestimoniPage() {
       {/* Table Controls (Pencarian & Baris Per Halaman) Standar */}
       <TableControls
         searchTerm={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setCurrentPage(1);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Cari testimoni..."
         pageSize={pageSize}
         onPageSizeChange={(size) => {
@@ -333,14 +340,14 @@ export default function AdminTestimoniPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center text-zinc-400">
                   Tidak ada data testimoni yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
             ) : (
-            paginatedData.map((item, idx) => (
+            data.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
                   {(currentPage - 1) * pageSize + idx + 1}
@@ -387,7 +394,7 @@ export default function AdminTestimoniPage() {
       </Table>
       )}
 
-      {!loading && filteredData.length > 0 && (
+      {!loading && totalCount > 0 && (
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}

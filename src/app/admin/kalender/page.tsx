@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Swal from "sweetalert2";
 import {
   HiOutlinePlus,
@@ -49,14 +49,25 @@ const formatDateDisplay = (startDate: string, endDate?: string | null): string =
 
 export default function AdminKalenderPage() {
   const [data, setData] = useState<CalendarEventRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Debounce search agar tidak spam query ke DB
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,45 +82,44 @@ export default function AdminKalenderPage() {
 
   const categories: EventCategory[] = ["Akademik", "Kegiatan", "Hari Libur"];
 
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+      .from("academic_calendar")
+      .select("*", { count: "exact" })
+      .order("start_date", { ascending: true })
+      .range(from, to);
+
+    if (debouncedSearch.trim()) {
+      const q = `%${debouncedSearch.trim()}%`;
+      query = query.or(`title.ilike.${q},description.ilike.${q}`);
+    }
+
+    if (selectedCategory !== "Semua") {
+      query = query.eq("category", selectedCategory);
+    }
+
+    const { data: records, count, error } = await query;
+
+    if (error) {
+      setLoadError(error.message);
+      Swal.fire("Error Database", "Gagal memuat agenda: " + error.message, "error");
+    } else {
+      setData((records as CalendarEventRecord[]) || []);
+      setTotalCount(count ?? 0);
+      setLoadError(null);
+    }
+    setIsLoading(false);
+  }, [currentPage, pageSize, debouncedSearch, selectedCategory]);
+
   useEffect(() => {
-    let ignore = false;
-    const load = async () => {
-      const { data: records, error } = await supabase
-        .from("academic_calendar")
-        .select("*")
-        .order("start_date", { ascending: true });
+    loadData();
+  }, [loadData]);
 
-      if (ignore) return;
-      if (error) {
-        setLoadError(error.message);
-        Swal.fire("Error Database", "Gagal memuat agenda: " + error.message, "error");
-      } else {
-        setData((records as CalendarEventRecord[]) || []);
-      }
-      setIsLoading(false);
-    };
-
-    void load();
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  // Filter Data (Global Search & Category)
-  const filteredData = data.filter((item) => {
-    const matchSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      ((item.description || "").toLowerCase().includes(search.toLowerCase()));
-    const matchCategory =
-      selectedCategory === "Semua" || item.category === selectedCategory;
-    return matchSearch && matchCategory;
-  });
-
-  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -285,10 +295,7 @@ export default function AdminKalenderPage() {
       {/* Table Controls (Pencarian, Filter & Baris Per Halaman) */}
       <TableControls
         searchTerm={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setCurrentPage(1);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Cari agenda..."
         pageSize={pageSize}
         onPageSizeChange={(size) => {
@@ -350,14 +357,14 @@ export default function AdminKalenderPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredData.length === 0 ? (
+            {data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center text-zinc-400">
                   Tidak ada agenda yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
             ) : (
-            paginatedData.map((item, idx) => (
+            data.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-center whitespace-nowrap">
                   {(currentPage - 1) * pageSize + idx + 1}
@@ -401,7 +408,7 @@ export default function AdminKalenderPage() {
       </Table>
       )}
 
-      {!isLoading && filteredData.length > 0 && (
+      {!isLoading && totalCount > 0 && (
         <TablePagination
           currentPage={currentPage}
           totalPages={totalPages}
