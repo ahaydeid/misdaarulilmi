@@ -53,7 +53,7 @@ export function TableControls({
               aria-label="Jumlah baris per halaman"
               value={pageSize ?? 10}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="appearance-none text-xs font-medium text-zinc-700 outline-none transition hover:border-zinc-300 focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-700 dark:focus:border-emerald-500 cursor-pointer"
+              className="appearance-none py-1.5 pl-3 pr-7 text-sm font-medium text-zinc-700 outline-none transition hover:border-zinc-300 focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-700 dark:focus:border-emerald-500 cursor-pointer"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -61,12 +61,12 @@ export function TableControls({
                 </option>
               ))}
             </select>
-            <HiOutlineChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-zinc-400" />
+            <HiOutlineChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2" />
           </div>
         )}
         {onSearchChange !== undefined && (
           <div className="relative w-48 sm:w-64">
-            <HiOutlineMagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
+            <HiOutlineMagnifyingGlass className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
             <input
               type="text"
               placeholder={searchPlaceholder}
@@ -75,7 +75,7 @@ export function TableControls({
               className="w-full rounded-full border border-zinc-200 bg-white py-1.5 pl-8 pr-3 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition focus:border-emerald-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:focus:border-emerald-500"
             />
           </div>
-        )}
+        )}``
       </div>
     </div>
   );
