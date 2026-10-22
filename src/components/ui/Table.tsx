@@ -106,7 +106,7 @@ export function TableHead({ children, className, ...props }: React.HTMLAttribute
 
 export function TableBody({ children, className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
-    <tbody className={`divide-y divide-zinc-100 dark:divide-zinc-800/60 ${className || ""}`} {...props}>
+    <tbody className={`${className || ""}`} {...props}>
       {children}
     </tbody>
   );
@@ -115,7 +115,7 @@ export function TableBody({ children, className, ...props }: React.HTMLAttribute
 export function TableRow({ children, className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr 
-      className={`group transition-colors hover:bg-zinc-100/70 dark:hover:bg-zinc-800/40 even:bg-zinc-50/60 dark:even:bg-zinc-900/40 ${className || ""}`} 
+      className={`group transition-colors hover:bg-zinc-100/70 dark:hover:bg-zinc-800/40 even:bg-zinc-50 dark:even:bg-zinc-900/40 ${className || ""}`} 
       {...props}
     >
       {children}

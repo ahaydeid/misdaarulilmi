@@ -29,6 +29,7 @@ import {
 import Avatar from "@/components/ui/Avatar";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { StaffMemberRecord } from "@/lib/services/staff";
+import StaffTable from "./StaffTable";
 
 export const instant = false;
 
@@ -355,6 +356,13 @@ export default async function ProfilPage() {
             </div>
           )}
         </div>
+
+        {/* Tabel Guru & Tendik untuk Kemudahan Keterbacaan */}
+        {activeStaff.length > 0 && (
+          <div className="mt-8 sm:mt-10">
+            <StaffTable staff={activeStaff} />
+          </div>
+        )}
       </div>
 
       {/* Section Identitas Satuan Pendidikan (Tabel Data Ringkas & Flat) */}
